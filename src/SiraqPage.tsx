@@ -1,18 +1,20 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import OrderModal from "./components/OrderModal";
+import type { ProductType } from "./types/order";
 
 const services = [
-  { title: "Premium Print Supply", desc: "Business cards, posters, branded stationery.", icon: "🎨" },
-  { title: "Custom IDs & Badges", desc: "High-security cards with metallic finishes.", icon: "💼" },
-  { title: "Event Invitations", desc: "Foil stamping, textured stock & custom folds.", icon: "💌" },
-  { title: "Large Format Prints", desc: "Banners, signage & storefront displays.", icon: "🖼️" },
-  { title: "Packaging & Labels", desc: "Luxury boxes, tamper tags, die-cut labels.", icon: "📦" },
-  { title: "Creative Studio Works", desc: "Logo refresh, visual systems & brand decks.", icon: "✨" },
-  { title: "Digital + Print Kits", desc: "Pitch decks, brochures, social-ready files.", icon: "🧠" },
-  { title: "Rapid Fulfillment", desc: "48-hr rush service & tracked logistics.", icon: "⚡" },
+  { title: "Wedding Card", desc: "Elegant wedding invitations with custom designs.", icon: "💌", type: "wedding-card" as ProductType },
+  { title: "ID Card", desc: "Professional ID cards with security features.", icon: "💼", type: "id-card" as ProductType },
+  { title: "Event Invitations", desc: "Custom event cards for any occasion.", icon: "🎉", type: "invitation" as ProductType },
+  { title: "Posters", desc: "Eye-catching posters for promotions & events.", icon: "🖼️", type: "poster" as ProductType },
+  { title: "Custom Prints", desc: "Flyers, brochures & marketing materials.", icon: "🎨", type: "custom-print" as ProductType },
+  { title: "Graphic Design", desc: "Professional logo & brand identity design.", icon: "✨", type: "graphic-work" as ProductType },
+  { title: "Large Format Prints", desc: "Banners, signage & storefront displays.", icon: "📐", type: "poster" as ProductType },
+  { title: "Packaging & Labels", desc: "Custom packaging solutions & product labels.", icon: "📦", type: "custom-print" as ProductType },
 ];
 
 const showcaseItems = [
@@ -50,6 +52,19 @@ const highlights = [
 ];
 
 const SiraqPage = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<ProductType | null>(null);
+
+  const handleProductClick = (productType: ProductType) => {
+    setSelectedProduct(productType);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedProduct(null);
+  };
+
   useEffect(() => {
     // Initialize AOS with error handling
     try {
@@ -105,6 +120,13 @@ const SiraqPage = () => {
 
   return (
     <div className="hero-bg min-h-screen overflow-x-hidden bg-gradient-to-br from-[#05070d] via-[#0a0c18] to-[#05070d] text-white">
+      {/* Order Modal */}
+      <OrderModal 
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        selectedProduct={selectedProduct}
+      />
+      
       <div className="pointer-events-none fixed inset-0 z-[1]">
         <div className="absolute left-[10%] top-[-10%] h-64 w-64 rounded-full bg-[#F9B234]/20 blur-3xl" />
         <div className="absolute bottom-[-10%] right-[5%] h-72 w-72 rounded-full bg-[#15F4EE]/20 blur-3xl" />
@@ -122,17 +144,17 @@ const SiraqPage = () => {
               Modern design. Quality products. Brighter ideas. We blend premium materials with futuristic visuals to keep your brand unforgettable.
             </p>
             <div className="flex flex-wrap justify-center gap-4 lg:justify-start">
-              <a
-                href="#products"
+              <button
+                onClick={() => handleProductClick('wedding-card')}
                 className="rounded-full bg-[#F9B234] px-6 py-3 text-sm font-semibold uppercase tracking-wider text-[#06070C] shadow-[0_20px_45px_rgba(21,244,238,0.25)] transition hover:-translate-y-1"
               >
-                View Products
-              </a>
+                Order Now
+              </button>
               <a
-                href="#showcase"
+                href="#products"
                 className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold uppercase tracking-wider text-white transition hover:-translate-y-1"
               >
-                View Works
+                View Products
               </a>
             </div>
           </div>
@@ -163,14 +185,15 @@ const SiraqPage = () => {
             {services.map((service, idx) => (
               <article
                 key={service.title}
-                className="glass rounded-3xl border border-white/5 bg-white/5 p-6 shadow-[0_25px_60px_rgba(4,6,16,0.55)] transition hover:-translate-y-2 hover:border-white/30"
+                onClick={() => handleProductClick(service.type)}
+                className="glass cursor-pointer rounded-3xl border border-white/5 bg-white/5 p-6 shadow-[0_25px_60px_rgba(4,6,16,0.55)] transition hover:-translate-y-2 hover:border-[#F9B234]/50 hover:shadow-[0_25px_60px_rgba(249,178,52,0.35)]"
                 data-aos="fade-up"
                 data-aos-delay={idx * 80}
               >
                 <div className="mb-4 flex items-center justify-between">
                   <span className="text-3xl">{service.icon}</span>
-                  <span className="rounded-full bg-white/5 px-3 py-1 text-xs uppercase tracking-wider text-[#9CA5C2]">
-                    Premium
+                  <span className="rounded-full bg-[#F9B234]/20 px-3 py-1 text-xs uppercase tracking-wider text-[#F9B234]">
+                    Order Now
                   </span>
                 </div>
                 <h3 className="text-lg font-semibold text-white">{service.title}</h3>
