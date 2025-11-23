@@ -1,15 +1,14 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
-import SiraqPage from "./SiraqPage";
+import App from "./App";
 
 const rootElement = document.getElementById("root");
 
 if (rootElement) {
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
-      <SiraqPage />
+      <App />
     </React.StrictMode>
   );
 }
-

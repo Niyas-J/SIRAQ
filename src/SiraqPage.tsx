@@ -5,6 +5,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import OrderModal from "./components/OrderModal";
 import type { ProductType } from "./types/order";
+import { getSiteConfig, generateWhatsAppOrderLink } from "./utils/firebaseUtils";
 
 const services = [
   { title: "Wedding Card", desc: "Elegant wedding invitations with custom designs.", icon: "💌", type: "wedding-card" as ProductType },
@@ -54,6 +55,7 @@ const highlights = [
 const SiraqPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<ProductType | null>(null);
+  const [whatsappNumber, setWhatsappNumber] = useState('+918217469646');
 
   const handleProductClick = (productType: ProductType) => {
     setSelectedProduct(productType);
@@ -63,6 +65,22 @@ const SiraqPage = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedProduct(null);
+  };
+
+  // Load site configuration
+  useEffect(() => {
+    const loadConfig = async () => {
+      const config = await getSiteConfig();
+      setWhatsappNumber(config.whatsapp);
+    };
+    
+    loadConfig();
+  }, []);
+
+  // Handle WhatsApp order
+  const handleWhatsAppOrder = (productName: string, price: number) => {
+    const whatsappLink = generateWhatsAppOrderLink(productName, price, whatsappNumber);
+    window.open(whatsappLink, '_blank');
   };
 
   useEffect(() => {
@@ -185,19 +203,35 @@ const SiraqPage = () => {
             {services.map((service, idx) => (
               <article
                 key={service.title}
-                onClick={() => handleProductClick(service.type)}
-                className="glass cursor-pointer rounded-3xl border border-white/5 bg-white/5 p-6 shadow-[0_25px_60px_rgba(4,6,16,0.55)] transition hover:-translate-y-2 hover:border-[#F9B234]/50 hover:shadow-[0_25px_60px_rgba(249,178,52,0.35)]"
+                className="glass rounded-3xl border border-white/5 bg-white/5 p-6 shadow-[0_25px_60px_rgba(4,6,16,0.55)] transition hover:-translate-y-2 hover:border-[#F9B234]/50 hover:shadow-[0_25px_60px_rgba(249,178,52,0.35)]"
                 data-aos="fade-up"
                 data-aos-delay={idx * 80}
               >
                 <div className="mb-4 flex items-center justify-between">
                   <span className="text-3xl">{service.icon}</span>
-                  <span className="rounded-full bg-[#F9B234]/20 px-3 py-1 text-xs uppercase tracking-wider text-[#F9B234]">
-                    Order Now
-                  </span>
+                  <button
+                    onClick={() => handleWhatsAppOrder(service.title, 
+                      service.type === 'wedding-card' ? 20 :
+                      service.type === 'id-card' ? 150 :
+                      service.type === 'poster' ? 150 :
+                      service.type === 'invitation' ? 15 :
+                      service.type === 'custom-print' ? 100 :
+                      service.type === 'graphic-work' ? 500 :
+                      service.type === 'large-format-print' ? 300 : 200
+                    )}
+                    className="rounded-full bg-[#15F4EE]/20 px-3 py-1 text-xs uppercase tracking-wider text-[#15F4EE] hover:bg-[#15F4EE]/30"
+                  >
+                    Order via WhatsApp
+                  </button>
                 </div>
                 <h3 className="text-lg font-semibold text-white">{service.title}</h3>
                 <p className="mt-2 text-sm text-[#9CA5C2]">{service.desc}</p>
+                <button
+                  onClick={() => handleProductClick(service.type)}
+                  className="mt-4 w-full rounded-full border border-white/20 px-4 py-2 text-sm font-semibold uppercase tracking-wider text-white transition hover:-translate-y-1"
+                >
+                  Order Now
+                </button>
               </article>
             ))}
           </div>
@@ -350,4 +384,3 @@ const SiraqPage = () => {
 };
 
 export default SiraqPage;
-

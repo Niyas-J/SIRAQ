@@ -1,0 +1,414 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { doc, setDoc, collection, getDocs, deleteDoc, updateDoc } from 'firebase/firestore';
+import { auth, db, storage } from '../../lib/firebaseClient';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+
+const AdminDashboard = () => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [config, setConfig] = useState({ whatsapp: '', logoUrl: '' });
+  const [products, setProducts] = useState([]);
+  const [newProduct, setNewProduct] = useState({ name: '', price: '', description: '', imageUrl: '' });
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [logoFile, setLogoFile] = useState(null);
+  const [productImageFile, setProductImageFile] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user);
+        loadConfig();
+        loadProducts();
+      } else {
+        navigate('/admin/login');
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
+
+  const loadConfig = async () => {
+    try {
+      const configRef = doc(db, 'site', 'config');
+      const configDoc = await getDocs(collection(db, 'site'));
+      
+      // Check if config exists
+      const configSnapshot = await getDocs(collection(db, 'site', 'config'));
+      if (!configSnapshot.empty) {
+        const configData = configSnapshot.docs[0].data();
+        setConfig(configData);
+      }
+    } catch (error) {
+      console.error('Error loading config:', error);
+    }
+  };
+
+  const loadProducts = async () => {
+    try {
+      const productsRef = collection(db, 'products');
+      const snapshot = await getDocs(productsRef);
+      const productsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setProducts(productsData);
+    } catch (error) {
+      console.error('Error loading products:', error);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate('/admin/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const handleConfigUpdate = async (e) => {
+    e.preventDefault();
+    
+    try {
+      // Upload logo if file is selected
+      let logoUrl = config.logoUrl;
+      if (logoFile) {
+        const logoRef = ref(storage, `site/logo-${Date.now()}`);
+        await uploadBytes(logoRef, logoFile);
+        logoUrl = await getDownloadURL(logoRef);
+      }
+
+      // Update config in Firestore
+      const configRef = doc(db, 'site', 'config');
+      await setDoc(configRef, {
+        whatsapp: config.whatsapp,
+        logoUrl: logoUrl
+      }, { merge: true });
+
+      alert('Configuration updated successfully!');
+    } catch (error) {
+      console.error('Error updating config:', error);
+      alert('Failed to update configuration.');
+    }
+  };
+
+  const handleAddProduct = async (e) => {
+    e.preventDefault();
+    
+    try {
+      let imageUrl = newProduct.imageUrl;
+      if (productImageFile) {
+        const imageRef = ref(storage, `products/${newProduct.name}-${Date.now()}`);
+        await uploadBytes(imageRef, productImageFile);
+        imageUrl = await getDownloadURL(imageRef);
+      }
+
+      // Add product to Firestore
+      const productRef = collection(db, 'products');
+      await setDoc(doc(productRef), {
+        name: newProduct.name,
+        price: parseFloat(newProduct.price),
+        description: newProduct.description,
+        imageUrl: imageUrl
+      });
+
+      // Reset form and reload products
+      setNewProduct({ name: '', price: '', description: '', imageUrl: '' });
+      setProductImageFile(null);
+      loadProducts();
+      alert('Product added successfully!');
+    } catch (error) {
+      console.error('Error adding product:', error);
+      alert('Failed to add product.');
+    }
+  };
+
+  const handleUpdateProduct = async (productId, updatedData) => {
+    try {
+      const productRef = doc(db, 'products', productId);
+      await updateDoc(productRef, updatedData);
+      loadProducts();
+      setEditingProduct(null);
+      alert('Product updated successfully!');
+    } catch (error) {
+      console.error('Error updating product:', error);
+      alert('Failed to update product.');
+    }
+  };
+
+  const handleDeleteProduct = async (productId) => {
+    if (!window.confirm('Are you sure you want to delete this product?')) return;
+    
+    try {
+      await deleteDoc(doc(db, 'products', productId));
+      loadProducts();
+      alert('Product deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      alert('Failed to delete product.');
+    }
+  };
+
+  const handleLogoChange = (e) => {
+    if (e.target.files[0]) {
+      setLogoFile(e.target.files[0]);
+    }
+  };
+
+  const handleProductImageChange = (e) => {
+    if (e.target.files[0]) {
+      setProductImageFile(e.target.files[0]);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#05070d] via-[#0a0c18] to-[#05070d] text-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F9B234] mx-auto"></div>
+          <p className="mt-4">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#05070d] via-[#0a0c18] to-[#05070d] text-white">
+      {/* Header */}
+      <header className="border-b border-white/10 bg-[#0F111A]/70 py-4">
+        <div className="container mx-auto px-6 flex justify-between items-center">
+          <h1 className="font-display text-2xl">Admin Dashboard</h1>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-[#9CA5C2]">Admin</span>
+            <button
+              onClick={handleLogout}
+              className="rounded-full bg-white/10 px-4 py-2 text-sm transition hover:bg-white/20"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-6 py-8">
+        {/* Site Configuration */}
+        <section className="mb-12">
+          <h2 className="font-display text-xl mb-6">Site Configuration</h2>
+          
+          <div className="glass rounded-[30px] border border-white/10 bg-white/5 p-6 shadow-[0_25px_60px_rgba(4,6,16,0.55)]">
+            <form onSubmit={handleConfigUpdate} className="space-y-6">
+              <div>
+                <label className="block text-sm mb-2">WhatsApp Number</label>
+                <input
+                  type="text"
+                  value={config.whatsapp}
+                  onChange={(e) => setConfig({ ...config, whatsapp: e.target.value })}
+                  className="glass w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none transition focus:border-[#F9B234]/50"
+                  placeholder="918217469646"
+                />
+                <p className="mt-1 text-xs text-[#9CA5C2]">Used for order buttons on the public site</p>
+              </div>
+
+              <div>
+                <label className="block text-sm mb-2">Site Logo</label>
+                <div className="flex items-center gap-4">
+                  {config.logoUrl && (
+                    <img src={config.logoUrl} alt="Current logo" className="w-16 h-16 object-contain" />
+                  )}
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoChange}
+                      className="glass w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none transition focus:border-[#F9B234]/50"
+                    />
+                    <p className="mt-1 text-xs text-[#9CA5C2]">Upload a new logo (PNG, JPG, SVG)</p>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="rounded-full bg-gradient-to-r from-[#F9B234] to-[#15F4EE] px-6 py-3 text-sm font-semibold uppercase tracking-wider text-[#06070C] shadow-[0_20px_45px_rgba(21,244,238,0.35)] transition hover:-translate-y-1"
+              >
+                Update Configuration
+              </button>
+            </form>
+          </div>
+        </section>
+
+        {/* Products Management */}
+        <section>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="font-display text-xl">Products Management</h2>
+            
+            <button
+              onClick={() => document.getElementById('add-product-modal').showModal()}
+              className="rounded-full bg-gradient-to-r from-[#F9B234] to-[#15F4EE] px-4 py-2 text-sm font-semibold uppercase tracking-wider text-[#06070C] shadow-[0_20px_45px_rgba(21,244,238,0.35)] transition hover:-translate-y-1"
+            >
+              Add Product
+            </button>
+          </div>
+
+          {/* Add Product Modal */}
+          <dialog id="add-product-modal" className="glass rounded-[30px] border border-white/10 bg-white/5 p-6 w-full max-w-2xl shadow-[0_25px_60px_rgba(4,6,16,0.55)] backdrop:bg-black/50">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-display text-lg">Add New Product</h3>
+              <button
+                onClick={() => document.getElementById('add-product-modal').close()}
+                className="text-white/60 hover:text-white text-2xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+            
+            <form onSubmit={handleAddProduct} className="space-y-4">
+              <div>
+                <label className="block text-sm mb-2">Product Name</label>
+                <input
+                  type="text"
+                  value={newProduct.name}
+                  onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                  className="glass w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none transition focus:border-[#F9B234]/50"
+                  placeholder="Product name"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm mb-2">Price (₹)</label>
+                <input
+                  type="number"
+                  value={newProduct.price}
+                  onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+                  className="glass w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none transition focus:border-[#F9B234]/50"
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm mb-2">Description</label>
+                <textarea
+                  value={newProduct.description}
+                  onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                  className="glass w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none transition focus:border-[#F9B234]/50"
+                  placeholder="Product description"
+                  rows="3"
+                  required
+                ></textarea>
+              </div>
+              
+              <div>
+                <label className="block text-sm mb-2">Product Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProductImageChange}
+                  className="glass w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none transition focus:border-[#F9B234]/50"
+                />
+              </div>
+              
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('add-product-modal').close()}
+                  className="rounded-full border border-white/20 px-6 py-2 text-sm font-semibold uppercase tracking-wider text-white transition hover:-translate-y-1"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-full bg-gradient-to-r from-[#F9B234] to-[#15F4EE] px-6 py-2 text-sm font-semibold uppercase tracking-wider text-[#06070C] shadow-[0_20px_45px_rgba(21,244,238,0.35)] transition hover:-translate-y-1"
+                >
+                  Add Product
+                </button>
+              </div>
+            </form>
+          </dialog>
+
+          {/* Products List */}
+          <div className="glass rounded-[30px] border border-white/10 bg-white/5 p-6 shadow-[0_25px_60px_rgba(4,6,16,0.55)]">
+            {products.length === 0 ? (
+              <p className="text-center py-8 text-[#9CA5C2]">No products found. Add your first product!</p>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {products.map((product) => (
+                  <div key={product.id} className="glass rounded-2xl border border-white/10 bg-white/5 p-4">
+                    {product.imageUrl && (
+                      <img src={product.imageUrl} alt={product.name} className="w-full h-40 object-cover rounded-lg mb-3" />
+                    )}
+                    <h3 className="font-semibold text-white">{product.name}</h3>
+                    <p className="text-sm text-[#9CA5C2] mt-1">{product.description}</p>
+                    
+                    {editingProduct === product.id ? (
+                      <div className="mt-3">
+                        <input
+                          type="number"
+                          value={product.price}
+                          onChange={(e) => {
+                            const updatedProducts = products.map(p => 
+                              p.id === product.id ? { ...p, price: parseFloat(e.target.value) } : p
+                            );
+                            setProducts(updatedProducts);
+                          }}
+                          className="glass w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none transition focus:border-[#F9B234]/50"
+                          min="0"
+                          step="0.01"
+                        />
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={() => handleUpdateProduct(product.id, { price: product.price })}
+                            className="flex-1 rounded-lg bg-green-500/20 px-3 py-1 text-xs text-green-300 hover:bg-green-500/30"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => setEditingProduct(null)}
+                            className="flex-1 rounded-lg bg-gray-500/20 px-3 py-1 text-xs text-gray-300 hover:bg-gray-500/30"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between items-center mt-3">
+                        <span className="font-semibold text-[#F9B234]">₹{product.price}</span>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setEditingProduct(product.id)}
+                            className="rounded-lg bg-blue-500/20 px-3 py-1 text-xs text-blue-300 hover:bg-blue-500/30"
+                          >
+                            Edit Price
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProduct(product.id)}
+                            className="rounded-lg bg-red-500/20 px-3 py-1 text-xs text-red-300 hover:bg-red-500/30"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+};
+
+export default AdminDashboard;
