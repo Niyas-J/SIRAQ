@@ -1,32 +1,65 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { doc, setDoc, collection, getDocs, deleteDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, collection, getDocs, deleteDoc, updateDoc, type DocumentData } from 'firebase/firestore';
 import { auth, db, storage } from '../../lib/firebaseClient';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { uploadLogo, removeLogo, revertToPreviousLogo } from '../../utils/firebaseUtils';
+import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
+
+// Define types
+interface SiteConfig {
+  whatsapp: string;
+  logoUrl: string;
+  logoUploadedBy?: string;
+  logoUploadedAt?: any;
+  logoHistory?: Array<{
+    url: string;
+    uploadedBy: string;
+    uploadedAt: any;
+  }>;
+}
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  imageUrl: string;
+}
+
+interface NewProduct {
+  name: string;
+  price: string;
+  description: string;
+  imageUrl: string;
+}
+
+interface LogoHistoryEntry {
+  url: string;
+  uploadedBy: string;
+  uploadedAt: any;
+}
 
 const AdminDashboard = () => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [config, setConfig] = useState({ 
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [config, setConfig] = useState<SiteConfig>({ 
     whatsapp: '', 
     logoUrl: '', 
     logoUploadedBy: '', 
     logoUploadedAt: null,
     logoHistory: []
   });
-  const [products, setProducts] = useState([]);
-  const [newProduct, setNewProduct] = useState({ name: '', price: '', description: '', imageUrl: '' });
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [logoFile, setLogoFile] = useState(null);
-  const [productImageFile, setProductImageFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState('');
+  const [products, setProducts] = useState<Product[]>([]);
+  const [newProduct, setNewProduct] = useState<NewProduct>({ name: '', price: '', description: '', imageUrl: '' });
+  const [editingProduct, setEditingProduct] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [productImageFile, setProductImageFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [uploadError, setUploadError] = useState<string>('');
   const navigate = useNavigate();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user: User | null) => {
       if (user) {
         setUser(user);
         loadConfig();
@@ -42,9 +75,6 @@ const AdminDashboard = () => {
 
   const loadConfig = async () => {
     try {
-      const configRef = doc(db, 'site', 'config');
-      const configDoc = await getDocs(collection(db, 'site'));
-      
       // Check if config exists
       const configSnapshot = await getDocs(collection(db, 'site', 'config'));
       if (!configSnapshot.empty) {
@@ -66,10 +96,10 @@ const AdminDashboard = () => {
     try {
       const productsRef = collection(db, 'products');
       const snapshot = await getDocs(productsRef);
-      const productsData = snapshot.docs.map(doc => ({
+      const productsData: Product[] = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      }));
+      })) as Product[];
       setProducts(productsData);
     } catch (error) {
       console.error('Error loading products:', error);
@@ -80,12 +110,12 @@ const AdminDashboard = () => {
     try {
       await signOut(auth);
       navigate('/admin/login');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error signing out:', error);
     }
   };
 
-  const handleConfigUpdate = async (e) => {
+  const handleConfigUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
@@ -96,13 +126,13 @@ const AdminDashboard = () => {
       }, { merge: true });
 
       alert('Configuration updated successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating config:', error);
       alert('Failed to update configuration.');
     }
   };
 
-  const handleLogoUpload = async (e) => {
+  const handleLogoUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!logoFile) {
@@ -114,11 +144,54 @@ const AdminDashboard = () => {
     setUploadError('');
 
     try {
-      await uploadLogo(logoFile, user.email);
+      // Validate file type
+      const allowedTypes = ['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp'];
+      if (!allowedTypes.includes(logoFile.type)) {
+        throw new Error('Invalid file type. Please upload SVG, PNG, JPG, JPEG, or WebP files only.');
+      }
+
+      // Validate file size (2MB max)
+      if (logoFile.size > 2 * 1024 * 1024) {
+        throw new Error('File size exceeds 2MB limit.');
+      }
+
+      // Upload file to Firebase Storage
+      const fileName = `site/logo/${Date.now()}_${logoFile.name}`;
+      const logoRef = ref(storage, fileName);
+      await uploadBytes(logoRef, logoFile);
+      const logoUrl = await getDownloadURL(logoRef);
+
+      // Get current config
+      const currentConfig = config;
+
+      // Create new history entry
+      const newHistoryEntry: LogoHistoryEntry = {
+        url: currentConfig.logoUrl,
+        uploadedBy: currentConfig.logoUploadedBy || '',
+        uploadedAt: currentConfig.logoUploadedAt
+      };
+
+      // Update logo history (keep only last 3)
+      let logoHistory = currentConfig.logoHistory || [];
+      if (newHistoryEntry.url) {
+        logoHistory.unshift(newHistoryEntry);
+      }
+      logoHistory = logoHistory.slice(0, 3);
+
+      // Update config in Firestore
+      const configRef = doc(db, 'site', 'config');
+      await setDoc(configRef, {
+        ...currentConfig,
+        logoUrl: logoUrl,
+        logoUploadedBy: user?.email || '',
+        logoUploadedAt: new Date(),
+        logoHistory: logoHistory
+      }, { merge: true });
+
       await loadConfig(); // Reload config to get updated data
       setLogoFile(null);
       alert('Logo uploaded successfully! Changes will appear on the site shortly.');
-    } catch (error) {
+    } catch (error: any) {
       setUploadError(error.message || 'Failed to upload logo.');
       console.error('Error uploading logo:', error);
     } finally {
@@ -130,29 +203,81 @@ const AdminDashboard = () => {
     if (!window.confirm('Are you sure you want to remove the current logo and revert to default?')) return;
     
     try {
-      await removeLogo();
+      // Get current config
+      const currentConfig = config;
+
+      // Create new history entry for current logo
+      const newHistoryEntry: LogoHistoryEntry = {
+        url: currentConfig.logoUrl,
+        uploadedBy: currentConfig.logoUploadedBy || '',
+        uploadedAt: currentConfig.logoUploadedAt
+      };
+
+      // Update logo history (keep only last 3)
+      let logoHistory = currentConfig.logoHistory || [];
+      if (newHistoryEntry.url) {
+        logoHistory.unshift(newHistoryEntry);
+      }
+      logoHistory = logoHistory.slice(0, 3);
+
+      // Update config in Firestore
+      const configRef = doc(db, 'site', 'config');
+      await setDoc(configRef, {
+        ...currentConfig,
+        logoUrl: '',
+        logoUploadedBy: '',
+        logoUploadedAt: null,
+        logoHistory: logoHistory
+      }, { merge: true });
+
       await loadConfig(); // Reload config to get updated data
       alert('Logo removed successfully! Site is now using the default logo.');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error removing logo:', error);
       alert('Failed to remove logo.');
     }
   };
 
-  const handleRevertToPreviousLogo = async (historyEntry) => {
+  const handleRevertToPreviousLogo = async (historyEntry: LogoHistoryEntry) => {
     if (!window.confirm('Are you sure you want to revert to this previous logo?')) return;
     
     try {
-      await revertToPreviousLogo(historyEntry);
+      // Get current config
+      const currentConfig = config;
+
+      // Create new history entry for current logo
+      const newHistoryEntry: LogoHistoryEntry = {
+        url: currentConfig.logoUrl,
+        uploadedBy: currentConfig.logoUploadedBy || '',
+        uploadedAt: currentConfig.logoUploadedAt
+      };
+
+      // Update logo history (keep only last 3)
+      let logoHistory = currentConfig.logoHistory || [];
+      if (newHistoryEntry.url) {
+        logoHistory.unshift(newHistoryEntry);
+      }
+      logoHistory = logoHistory.slice(0, 3);
+
+      // Update config in Firestore
+      const configRef = doc(db, 'site', 'config');
+      await setDoc(configRef, {
+        ...currentConfig,
+        logoUrl: historyEntry.url,
+        logoUploadedBy: historyEntry.uploadedBy,
+        logoUploadedAt: historyEntry.uploadedAt,
+        logoHistory: logoHistory.filter((entry) => entry.url !== historyEntry.url)
+      }, { merge: true });
+
       await loadConfig(); // Reload config to get updated data
       alert('Logo reverted successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error reverting to previous logo:', error);
       alert('Failed to revert to previous logo.');
     }
   };
 
-  const handleAddProduct = async (e) => {
+  const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
@@ -177,40 +302,40 @@ const AdminDashboard = () => {
       setProductImageFile(null);
       loadProducts();
       alert('Product added successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding product:', error);
       alert('Failed to add product.');
     }
   };
 
-  const handleUpdateProduct = async (productId, updatedData) => {
+  const handleUpdateProduct = async (productId: string, updatedData: any) => {
     try {
       const productRef = doc(db, 'products', productId);
       await updateDoc(productRef, updatedData);
       loadProducts();
       setEditingProduct(null);
       alert('Product updated successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating product:', error);
       alert('Failed to update product.');
     }
   };
 
-  const handleDeleteProduct = async (productId) => {
+  const handleDeleteProduct = async (productId: string) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
     
     try {
       await deleteDoc(doc(db, 'products', productId));
       loadProducts();
       alert('Product deleted successfully!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting product:', error);
       alert('Failed to delete product.');
     }
   };
 
-  const handleLogoChange = (e) => {
-    if (e.target.files[0]) {
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       
       // Validate file type
@@ -231,13 +356,13 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleProductImageChange = (e) => {
-    if (e.target.files[0]) {
+  const handleProductImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
       setProductImageFile(e.target.files[0]);
     }
   };
 
-  const formatDate = (date) => {
+  const formatDate = (date: any) => {
     if (!date) return 'Unknown';
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -408,7 +533,7 @@ const AdminDashboard = () => {
 
               <button
                 type="submit"
-                className="rounded-full bg-gradient-to-r from-[#F9B234] to-[#15F4EE] px-6 py-3 text-sm font-semibold uppercase tracking-wider text-[#06070C] shadow-[0_20px_45px_rgba(21,244,238,0.35)] transition hover:-translate-y-1"
+                className="rounded-full bg-gradient-to-r from-[#F9B234] to-[#15F4EE] px-6 py-3 text-sm font-semibold uppercase tracking-wider text-[#06070C] shadow-[0_25px_45px_rgba(21,244,238,0.35)] transition hover:-translate-y-1"
               >
                 Update Configuration
               </button>
@@ -422,7 +547,12 @@ const AdminDashboard = () => {
             <h2 className="font-display text-xl">Products Management</h2>
             
             <button
-              onClick={() => document.getElementById('add-product-modal').showModal()}
+              onClick={() => {
+                const modal = document.getElementById('add-product-modal') as HTMLDialogElement | null;
+                if (modal) {
+                  modal.showModal();
+                }
+              }}
               className="rounded-full bg-gradient-to-r from-[#F9B234] to-[#15F4EE] px-4 py-2 text-sm font-semibold uppercase tracking-wider text-[#06070C] shadow-[0_20px_45px_rgba(21,244,238,0.35)] transition hover:-translate-y-1"
             >
               Add Product
@@ -434,7 +564,12 @@ const AdminDashboard = () => {
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-display text-lg">Add New Product</h3>
               <button
-                onClick={() => document.getElementById('add-product-modal').close()}
+                onClick={() => {
+                  const modal = document.getElementById('add-product-modal') as HTMLDialogElement | null;
+                  if (modal) {
+                    modal.close();
+                  }
+                }}
                 className="text-white/60 hover:text-white text-2xl leading-none"
               >
                 ×
@@ -475,7 +610,7 @@ const AdminDashboard = () => {
                   onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
                   className="glass w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none transition focus:border-[#F9B234]/50"
                   placeholder="Product description"
-                  rows="3"
+                  rows={3}
                   required
                 ></textarea>
               </div>
@@ -493,7 +628,12 @@ const AdminDashboard = () => {
               <div className="flex justify-end gap-3 mt-6">
                 <button
                   type="button"
-                  onClick={() => document.getElementById('add-product-modal').close()}
+                  onClick={() => {
+                    const modal = document.getElementById('add-product-modal') as HTMLDialogElement | null;
+                    if (modal) {
+                      modal.close();
+                    }
+                  }}
                   className="rounded-full border border-white/20 px-6 py-2 text-sm font-semibold uppercase tracking-wider text-white transition hover:-translate-y-1"
                 >
                   Cancel

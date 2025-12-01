@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, type User } from 'firebase/auth';
 import { auth } from '../../lib/firebaseClient';
 
 const AdminLogin = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [error, setError] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     // Check if user is already logged in
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const unsubscribe = auth.onAuthStateChanged((user: User | null) => {
       if (user) {
         navigate('/admin');
       }
@@ -21,7 +21,7 @@ const AdminLogin = () => {
     return () => unsubscribe();
   }, [navigate]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
@@ -29,7 +29,7 @@ const AdminLogin = () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       navigate('/admin');
-    } catch (err) {
+    } catch (err: any) {
       setError('Failed to login. Please check your credentials.');
       console.error('Login error:', err);
     } finally {
