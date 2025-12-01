@@ -4,16 +4,25 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { doc, setDoc, collection, getDocs, deleteDoc, updateDoc } from 'firebase/firestore';
 import { auth, db, storage } from '../../lib/firebaseClient';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { uploadLogo, removeLogo, revertToPreviousLogo } from '../../utils/firebaseUtils';
 
 const AdminDashboard = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [config, setConfig] = useState({ whatsapp: '', logoUrl: '' });
+  const [config, setConfig] = useState({ 
+    whatsapp: '', 
+    logoUrl: '', 
+    logoUploadedBy: '', 
+    logoUploadedAt: null,
+    logoHistory: []
+  });
   const [products, setProducts] = useState([]);
   const [newProduct, setNewProduct] = useState({ name: '', price: '', description: '', imageUrl: '' });
   const [editingProduct, setEditingProduct] = useState(null);
   const [logoFile, setLogoFile] = useState(null);
   const [productImageFile, setProductImageFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,7 +49,13 @@ const AdminDashboard = () => {
       const configSnapshot = await getDocs(collection(db, 'site', 'config'));
       if (!configSnapshot.empty) {
         const configData = configSnapshot.docs[0].data();
-        setConfig(configData);
+        setConfig({
+          whatsapp: configData.whatsapp || '',
+          logoUrl: configData.logoUrl || '',
+          logoUploadedBy: configData.logoUploadedBy || '',
+          logoUploadedAt: configData.logoUploadedAt || null,
+          logoHistory: configData.logoHistory || []
+        });
       }
     } catch (error) {
       console.error('Error loading config:', error);
@@ -74,25 +89,66 @@ const AdminDashboard = () => {
     e.preventDefault();
     
     try {
-      // Upload logo if file is selected
-      let logoUrl = config.logoUrl;
-      if (logoFile) {
-        const logoRef = ref(storage, `site/logo-${Date.now()}`);
-        await uploadBytes(logoRef, logoFile);
-        logoUrl = await getDownloadURL(logoRef);
-      }
-
       // Update config in Firestore
       const configRef = doc(db, 'site', 'config');
       await setDoc(configRef, {
-        whatsapp: config.whatsapp,
-        logoUrl: logoUrl
+        whatsapp: config.whatsapp
       }, { merge: true });
 
       alert('Configuration updated successfully!');
     } catch (error) {
       console.error('Error updating config:', error);
       alert('Failed to update configuration.');
+    }
+  };
+
+  const handleLogoUpload = async (e) => {
+    e.preventDefault();
+    
+    if (!logoFile) {
+      setUploadError('Please select a logo file to upload.');
+      return;
+    }
+
+    setUploading(true);
+    setUploadError('');
+
+    try {
+      await uploadLogo(logoFile, user.email);
+      await loadConfig(); // Reload config to get updated data
+      setLogoFile(null);
+      alert('Logo uploaded successfully! Changes will appear on the site shortly.');
+    } catch (error) {
+      setUploadError(error.message || 'Failed to upload logo.');
+      console.error('Error uploading logo:', error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    if (!window.confirm('Are you sure you want to remove the current logo and revert to default?')) return;
+    
+    try {
+      await removeLogo();
+      await loadConfig(); // Reload config to get updated data
+      alert('Logo removed successfully! Site is now using the default logo.');
+    } catch (error) {
+      console.error('Error removing logo:', error);
+      alert('Failed to remove logo.');
+    }
+  };
+
+  const handleRevertToPreviousLogo = async (historyEntry) => {
+    if (!window.confirm('Are you sure you want to revert to this previous logo?')) return;
+    
+    try {
+      await revertToPreviousLogo(historyEntry);
+      await loadConfig(); // Reload config to get updated data
+      alert('Logo reverted successfully!');
+    } catch (error) {
+      console.error('Error reverting to previous logo:', error);
+      alert('Failed to revert to previous logo.');
     }
   };
 
@@ -155,7 +211,23 @@ const AdminDashboard = () => {
 
   const handleLogoChange = (e) => {
     if (e.target.files[0]) {
-      setLogoFile(e.target.files[0]);
+      const file = e.target.files[0];
+      
+      // Validate file type
+      const allowedTypes = ['image/svg+xml', 'image/png', 'image/jpeg', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        setUploadError('Invalid file type. Please upload SVG, PNG, JPG, JPEG, or WebP files only.');
+        return;
+      }
+
+      // Validate file size (2MB max)
+      if (file.size > 2 * 1024 * 1024) {
+        setUploadError('File size exceeds 2MB limit.');
+        return;
+      }
+
+      setLogoFile(file);
+      setUploadError('');
     }
   };
 
@@ -163,6 +235,17 @@ const AdminDashboard = () => {
     if (e.target.files[0]) {
       setProductImageFile(e.target.files[0]);
     }
+  };
+
+  const formatDate = (date) => {
+    if (!date) return 'Unknown';
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   if (loading) {
@@ -199,6 +282,112 @@ const AdminDashboard = () => {
       </header>
 
       <main className="container mx-auto px-6 py-8">
+        {/* Site Logo & Branding */}
+        <section className="mb-12">
+          <h2 className="font-display text-xl mb-6">Site Logo & Branding</h2>
+          
+          <div className="glass rounded-[30px] border border-white/10 bg-white/5 p-6 shadow-[0_25px_60px_rgba(4,6,16,0.55)]">
+            <form onSubmit={handleLogoUpload} className="space-y-6">
+              <div>
+                <label className="block text-sm mb-2">Current Logo</label>
+                <div className="flex items-center gap-4">
+                  {config.logoUrl ? (
+                    <img src={config.logoUrl} alt="Current logo" className="w-16 h-16 object-contain" />
+                  ) : (
+                    <div className="w-16 h-16 bg-gray-700 rounded flex items-center justify-center">
+                      <span className="text-xs text-gray-400">No logo</span>
+                    </div>
+                  )}
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/svg+xml,image/png,image/jpeg,image/webp"
+                      onChange={handleLogoChange}
+                      className="glass w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none transition focus:border-[#F9B234]/50"
+                    />
+                    <p className="mt-1 text-xs text-[#9CA5C2]">Upload a new logo (SVG, PNG, JPG, WebP - max 2MB)</p>
+                  </div>
+                </div>
+                
+                {logoFile && (
+                  <div className="mt-4">
+                    <label className="block text-sm mb-2">Preview</label>
+                    <img 
+                      src={URL.createObjectURL(logoFile)} 
+                      alt="Logo preview" 
+                      className="w-32 h-32 object-contain border border-white/10 rounded-lg p-2"
+                    />
+                  </div>
+                )}
+                
+                {uploadError && (
+                  <div className="mt-2 p-2 bg-red-500/20 border border-red-500/30 rounded text-red-200 text-sm">
+                    {uploadError}
+                  </div>
+                )}
+                
+                {config.logoUrl && (
+                  <div className="mt-4 text-sm text-[#9CA5C2]">
+                    <p>Uploaded by: {config.logoUploadedBy || 'Unknown'}</p>
+                    <p>Uploaded on: {formatDate(config.logoUploadedAt)}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={uploading || !logoFile}
+                  className="rounded-full bg-gradient-to-r from-[#F9B234] to-[#15F4EE] px-6 py-3 text-sm font-semibold uppercase tracking-wider text-[#06070C] shadow-[0_20px_45px_rgba(21,244,238,0.35)] transition hover:-translate-y-1 disabled:opacity-50"
+                >
+                  {uploading ? 'Uploading...' : 'Upload Logo'}
+                </button>
+                
+                {config.logoUrl && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveLogo}
+                    className="rounded-full border border-red-500/50 px-6 py-3 text-sm font-semibold uppercase tracking-wider text-red-300 transition hover:bg-red-500/10"
+                  >
+                    Remove Logo
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+        </section>
+
+        {/* Logo History */}
+        {config.logoHistory && config.logoHistory.length > 0 && (
+          <section className="mb-12">
+            <h2 className="font-display text-xl mb-6">Logo History</h2>
+            
+            <div className="glass rounded-[30px] border border-white/10 bg-white/5 p-6 shadow-[0_25px_60px_rgba(4,6,16,0.55)]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {config.logoHistory.map((entry, index) => (
+                  <div key={index} className="glass rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <img 
+                      src={entry.url} 
+                      alt={`Previous logo ${index + 1}`} 
+                      className="w-full h-24 object-contain mb-3"
+                    />
+                    <div className="text-xs text-[#9CA5C2]">
+                      <p>Uploaded by: {entry.uploadedBy || 'Unknown'}</p>
+                      <p>Uploaded on: {formatDate(entry.uploadedAt)}</p>
+                    </div>
+                    <button
+                      onClick={() => handleRevertToPreviousLogo(entry)}
+                      className="mt-3 w-full rounded-full bg-blue-500/20 px-3 py-1 text-xs text-blue-300 hover:bg-blue-500/30"
+                    >
+                      Revert to this
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Site Configuration */}
         <section className="mb-12">
           <h2 className="font-display text-xl mb-6">Site Configuration</h2>
@@ -215,24 +404,6 @@ const AdminDashboard = () => {
                   placeholder="918217469646"
                 />
                 <p className="mt-1 text-xs text-[#9CA5C2]">Used for order buttons on the public site</p>
-              </div>
-
-              <div>
-                <label className="block text-sm mb-2">Site Logo</label>
-                <div className="flex items-center gap-4">
-                  {config.logoUrl && (
-                    <img src={config.logoUrl} alt="Current logo" className="w-16 h-16 object-contain" />
-                  )}
-                  <div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleLogoChange}
-                      className="glass w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none transition focus:border-[#F9B234]/50"
-                    />
-                    <p className="mt-1 text-xs text-[#9CA5C2]">Upload a new logo (PNG, JPG, SVG)</p>
-                  </div>
-                </div>
               </div>
 
               <button

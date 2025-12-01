@@ -7,6 +7,7 @@ Modern design studio website for creative prints and supplies.
 - Browse products and services
 - Order via WhatsApp with pre-filled messages
 - Admin dashboard for managing products and site configuration
+- Logo upload and management with history
 - Responsive design with modern UI
 
 ## Tech Stack
@@ -51,6 +52,15 @@ Deployed on Vercel. To deploy:
 
 Admin dashboard is available at `/admin/login`. Default admin credentials need to be set up in Firebase Authentication.
 
+## Logo Management
+
+Admins can upload, manage, and revert logos through the admin dashboard:
+
+1. Navigate to the "Site Logo & Branding" section
+2. Upload a new logo (SVG, PNG, JPG, WebP - max 2MB)
+3. View logo history and revert to previous versions
+4. Remove current logo to revert to default
+
 ## Firebase Setup Steps
 
 1. Create a Firebase project
@@ -67,6 +77,9 @@ site/
   config (document)
     whatsapp: string
     logoUrl: string
+    logoUploadedBy: string
+    logoUploadedAt: timestamp
+    logoHistory: array of { url, uploadedBy, uploadedAt }
 
 products/ (collection)
   doc: { name: string, price: number, description: string, imageUrl: string }
@@ -98,6 +111,14 @@ service cloud.firestore {
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+    match /site/logo/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+    match /products/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
     match /{allPaths=**} {
       allow read: if true;
       allow write: if request.auth != null && request.auth.token.admin == true;

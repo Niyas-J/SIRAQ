@@ -6,6 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import OrderModal from "./components/OrderModal";
 import type { ProductType } from "./types/order";
 import { getSiteConfig, generateWhatsAppOrderLink } from "./utils/firebaseUtils";
+import Header from "./components/Header";
 
 const services = [
   { title: "Wedding Card", desc: "Elegant wedding invitations with custom designs.", icon: "💌", type: "wedding-card" as ProductType },
@@ -56,6 +57,11 @@ const SiraqPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<ProductType | null>(null);
   const [whatsappNumber, setWhatsappNumber] = useState('+918217469646');
+  const [logoConfig, setLogoConfig] = useState({
+    logoUrl: '',
+    logoUploadedBy: '',
+    logoUploadedAt: null
+  });
 
   const handleProductClick = (productType: ProductType) => {
     setSelectedProduct(productType);
@@ -72,6 +78,11 @@ const SiraqPage = () => {
     const loadConfig = async () => {
       const config = await getSiteConfig();
       setWhatsappNumber(config.whatsapp);
+      setLogoConfig({
+        logoUrl: config.logoUrl || '',
+        logoUploadedBy: config.logoUploadedBy || '',
+        logoUploadedAt: config.logoUploadedAt || null
+      });
     };
     
     loadConfig();
@@ -81,6 +92,17 @@ const SiraqPage = () => {
   const handleWhatsAppOrder = (productName: string, price: number) => {
     const whatsappLink = generateWhatsAppOrderLink(productName, price, whatsappNumber);
     window.open(whatsappLink, '_blank');
+  };
+
+  const formatDate = (date: any) => {
+    if (!date) return 'Unknown';
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   useEffect(() => {
@@ -151,6 +173,8 @@ const SiraqPage = () => {
       </div>
 
       <main className="relative z-10 font-sans">
+        <Header />
+        
         {/* Hero */}
         <section className="container mx-auto flex min-h-screen flex-wrap items-center px-6 py-20 lg:flex-nowrap lg:gap-16">
           <div className="w-full space-y-6 text-center lg:w-1/2 lg:text-left" data-aos="fade-up">
@@ -237,7 +261,48 @@ const SiraqPage = () => {
           </div>
         </section>
 
-        {/* Showcase */}
+        {/* Logo Showcase */}
+        <section id="logo-showcase" className="container mx-auto px-6 py-20">
+          <div className="mb-12 text-center" data-aos="fade-up">
+            <p className="text-xs uppercase tracking-[0.4em] text-[#9CA5C2]">Our Brand</p>
+            <h2 className="font-display text-3xl">Our Logo — Siraq Studio</h2>
+          </div>
+          
+          <div className="glass rounded-[32px] border border-white/10 bg-white/5 p-10 shadow-[0_25px_60px_rgba(4,6,16,0.55)] max-w-4xl mx-auto" data-aos="fade-up">
+            {logoConfig.logoUrl ? (
+              <div className="text-center">
+                <div className="flex justify-center mb-8">
+                  <img 
+                    src={logoConfig.logoUrl} 
+                    alt="Siraq Studio logo" 
+                    className="max-w-full max-h-96 object-contain"
+                  />
+                </div>
+                <div className="text-sm text-[#9CA5C2] mt-6">
+                  <p>Uploaded by: {logoConfig.logoUploadedBy || 'Unknown'}</p>
+                  <p>Uploaded on: {formatDate(logoConfig.logoUploadedAt)}</p>
+                </div>
+                <a 
+                  href={logoConfig.logoUrl} 
+                  download="siraq-studio-logo"
+                  className="inline-block mt-6 rounded-full border border-white/20 px-6 py-2 text-sm font-semibold uppercase tracking-wider text-white transition hover:-translate-y-1"
+                >
+                  Download Logo
+                </a>
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="mx-auto w-32 h-32 bg-gray-800 rounded-full flex items-center justify-center mb-6">
+                  <span className="text-5xl">🎨</span>
+                </div>
+                <h3 className="font-display text-xl mb-2">No logo uploaded yet</h3>
+                <p className="text-[#9CA5C2]">Using default branding</p>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Portfolio Showcase */}
         <section id="showcase" className="container mx-auto px-6 py-20">
           <div className="mb-12 flex flex-wrap items-center justify-between gap-6">
             <div>
