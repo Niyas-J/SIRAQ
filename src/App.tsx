@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import SiraqPage from './SiraqPage';
-import AdminLogin from './pages/admin/login';
-import AdminDashboard from './pages/admin';
+import AdminLogin from './pages/admin/login.tsx';
+import AdminDashboard from './pages/admin/index.tsx';
 
 function App() {
   return (
