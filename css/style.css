@@ -48,7 +48,8 @@ body {
 }
 
 .hero-bg {
-    background: radial-gradient(circle at 20% 20%, rgba(249, 178, 52, 0.12), transparent 50%),
+    background-color: #05070d;
+    background-image: radial-gradient(circle at 20% 20%, rgba(249, 178, 52, 0.12), transparent 50%),
         radial-gradient(circle at 80% 0%, rgba(21, 244, 238, 0.16), transparent 40%);
 }
 
