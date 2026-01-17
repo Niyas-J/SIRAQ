@@ -1,0 +1,210 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;600;700&display=swap');
+
+body {
+    background: #05070d;
+    color: #f8f9ff;
+    font-family: "Inter", sans-serif;
+    cursor: none;
+    /* Custom cursor */
+}
+
+/* Preloader */
+#preloader {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.loader-text {
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+    font-size: 2rem;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.2rem;
+}
+
+.loader-text span {
+    display: inline-block;
+    transform: translateY(100%);
+}
+
+.loader-bar {
+    width: 0%;
+    height: 2px;
+    background: #15F4EE;
+    margin-top: 20px;
+}
+
+.glass {
+    backdrop-filter: blur(18px);
+    background: rgba(16, 19, 35, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hero-bg {
+    background: radial-gradient(circle at 20% 20%, rgba(249, 178, 52, 0.12), transparent 50%),
+        radial-gradient(circle at 80% 0%, rgba(21, 244, 238, 0.16), transparent 40%);
+}
+
+.gradient-outline {
+    border: 1px solid transparent;
+    background-image: linear-gradient(#101225, #101225),
+        linear-gradient(120deg, rgba(249, 178, 52, 0.8), rgba(21, 244, 238, 0.8));
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+}
+
+/* Magic UI Effects */
+.meteor {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    height: 2px;
+    width: 100px;
+    background: linear-gradient(to right, #94a3b8, transparent);
+    opacity: 0;
+    transform: rotate(215deg);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.border-beam {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 10;
+    overflow: hidden;
+}
+
+.border-beam::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100px;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(21, 244, 238, 0.8), transparent);
+    opacity: 0.8;
+    filter: blur(10px);
+    transform: skewX(-20deg) translateX(-150%);
+    animation: beam 4s infinite linear;
+}
+
+@keyframes beam {
+    0% {
+        transform: skewX(-20deg) translateX(-150%);
+    }
+
+    100% {
+        transform: skewX(-20deg) translateX(500%);
+    }
+}
+
+.marquee-container {
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+}
+
+
+.marquee-content {
+    display: inline-block;
+}
+
+/* Film Grain */
+.film-grain {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9998;
+    opacity: 0.4;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
+    animation: grain 8s steps(10) infinite;
+}
+
+@keyframes grain {
+
+    0%,
+    100% {
+        transform: translate(0, 0);
+    }
+
+    10% {
+        transform: translate(-5%, -10%);
+    }
+
+    20% {
+        transform: translate(-15%, 5%);
+    }
+
+    30% {
+        transform: translate(7%, -25%);
+    }
+
+    40% {
+        transform: translate(-5%, 25%);
+    }
+
+    50% {
+        transform: translate(-15%, 10%);
+    }
+
+    60% {
+        transform: translate(15%, 0%);
+    }
+
+    70% {
+        transform: translate(0%, 15%);
+    }
+
+    80% {
+        transform: translate(3%, 35%);
+    }
+
+    90% {
+        transform: translate(-10%, 10%);
+    }
+}
+
+/* Editorial Typography */
+h1,
+h2 {
+    letter-spacing: -0.04em !important;
+    /* Tighter headings */
+}
+
+p.uppercase,
+span.uppercase {
+    letter-spacing: 0.15em !important;
+    /* Wider labels/tags */
+}
+
+/* Reveal Masks */
+.reveal-img {
+    clip-path: inset(100% 0 0 0);
+    transition: clip-path 1.5s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+.reveal-visible {
+    clip-path: inset(0% 0 0 0);
+}
+
+/* Custom Cursor Styles */
+#cursor {
+    transform: translate(-50%, -50%);
+}
+
+/* Magnetic Effect Class */
+.magnetic-wrap {
+    display: inline-block;
+}
