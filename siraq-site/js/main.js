@@ -51,15 +51,46 @@ window.addEventListener("load", () => {
 });
 
 // Render Dynamic Content
-const services = [
-    { title: "Premium Print Supply", desc: "Business cards, posters, branded stationery.", icon: "🎨" },
-    { title: "Custom IDs & Badges", desc: "High-security cards with metallic finishes.", icon: "💼" },
-    { title: "Event Invitations", desc: "Foil stamping, textured stock & custom folds.", icon: "💌" },
-    { title: "Large Format Prints", desc: "Banners, signage & storefront displays.", icon: "🖼️" },
-    { title: "Packaging & Labels", desc: "Luxury boxes, tamper tags, die-cut labels.", icon: "📦" },
-    { title: "Creative Studio Works", desc: "Logo refresh, visual systems & brand decks.", icon: "✨" },
-    { title: "Digital + Print Kits", desc: "Pitch decks, brochures, social-ready files.", icon: "🧠" },
-    { title: "Rapid Fulfillment", desc: "48-hr rush service & tracked logistics.", icon: "⚡" },
+const services = [{
+    title: "Premium Print Supply",
+    desc: "Business cards, posters, branded stationery.",
+    icon: "🎨"
+},
+{
+    title: "Custom IDs & Badges",
+    desc: "High-security cards with metallic finishes.",
+    icon: "💼"
+},
+{
+    title: "Event Invitations",
+    desc: "Foil stamping, textured stock & custom folds.",
+    icon: "💌"
+},
+{
+    title: "Large Format Prints",
+    desc: "Banners, signage & storefront displays.",
+    icon: "🖼️"
+},
+{
+    title: "Packaging & Labels",
+    desc: "Luxury boxes, tamper tags, die-cut labels.",
+    icon: "📦"
+},
+{
+    title: "Creative Studio Works",
+    desc: "Logo refresh, visual systems & brand decks.",
+    icon: "✨"
+},
+{
+    title: "Digital + Print Kits",
+    desc: "Pitch decks, brochures, social-ready files.",
+    icon: "🧠"
+},
+{
+    title: "Rapid Fulfillment",
+    desc: "48-hr rush service & tracked logistics.",
+    icon: "⚡"
+},
 ];
 
 const productsGrid = document.getElementById("products-grid");
@@ -68,7 +99,7 @@ if (productsGrid) {
         .map(
             (service, idx) => `
     <article
-      class="glass group rounded-3xl p-6 shadow-glass transition hover:-translate-y-2 hover:border-white/30 product-card"
+      class="glass group rounded-3xl p-6 shadow-glass transition product-card"
     >
       <div class="mb-4 flex items-center justify-between">
         <span class="text-3xl">${service.icon}</span>
@@ -94,31 +125,30 @@ if (productsGrid) {
     });
 }
 
-const showcaseItems = [
-    {
-        title: "Aurora Luxe Cards",
-        img: "images/aurora-luxe.jpg",
-    },
-    {
-        title: "Holographic Merch Tags",
-        img: "images/holographic-tags.jpg",
-    },
-    {
-        title: "Modular Identity Suite",
-        img: "images/modular-identity.jpg",
-    },
-    {
-        title: "Luxury Event Collateral",
-        img: "images/luxury-event.jpg",
-    },
-    {
-        title: "Retail Supply Kits",
-        img: "images/retail-supply.jpg",
-    },
-    {
-        title: "Custom Packaging Concept",
-        img: "images/custom-packaging.jpg",
-    },
+const showcaseItems = [{
+    title: "Aurora Luxe Cards",
+    img: "images/aurora-luxe.jpg",
+},
+{
+    title: "Holographic Merch Tags",
+    img: "images/holographic-tags.jpg",
+},
+{
+    title: "Modular Identity Suite",
+    img: "images/modular-identity.jpg",
+},
+{
+    title: "Luxury Event Collateral",
+    img: "images/luxury-event.jpg",
+},
+{
+    title: "Retail Supply Kits",
+    img: "images/retail-supply.jpg",
+},
+{
+    title: "Custom Packaging Concept",
+    img: "images/custom-packaging.jpg",
+},
 ];
 
 const showcaseGrid = document.getElementById("showcase-grid");
@@ -162,11 +192,30 @@ if (showcaseGrid) {
     });
 }
 
-const highlights = [
-    { title: "Bright Designs", desc: "Futuristic visuals curated for impact.", icon: "⚡", color: "text-neon" },
-    { title: "Premium Materials", desc: "Specialty stock, foils & finishes.", icon: "🎯", color: "text-accent" },
-    { title: "Fast Delivery", desc: "48-hour rush & global shipping.", icon: "🚀", color: "text-neon" },
-    { title: "Custom Works", desc: "Built for brands, events, and stories.", icon: "🧬", color: "text-accent" },
+const highlights = [{
+    title: "Bright Designs",
+    desc: "Futuristic visuals curated for impact.",
+    icon: "⚡",
+    color: "text-neon"
+},
+{
+    title: "Premium Materials",
+    desc: "Specialty stock, foils & finishes.",
+    icon: "🎯",
+    color: "text-accent"
+},
+{
+    title: "Fast Delivery",
+    desc: "48-hour rush & global shipping.",
+    icon: "🚀",
+    color: "text-neon"
+},
+{
+    title: "Custom Works",
+    desc: "Built for brands, events, and stories.",
+    icon: "🧬",
+    color: "text-accent"
+},
 ];
 
 const highlightsGrid = document.getElementById("highlights-grid");
@@ -174,7 +223,7 @@ if (highlightsGrid) {
     highlightsGrid.innerHTML = highlights
         .map(
             (highlight) => `
-    <div class="rounded-3xl border border-white/5 bg-white/5 p-6 transition hover:-translate-y-2 highlight-card">
+    <div class="rounded-3xl border border-white/5 bg-white/5 p-6 transition highlight-card">
       <span class="text-3xl ${highlight.color}">${highlight.icon}</span>
       <h3 class="mt-4 text-lg font-semibold">${highlight.title}</h3>
       <p class="mt-2 text-sm text-slateSoft">${highlight.desc}</p>
@@ -256,7 +305,14 @@ if (meteorContainer) {
             onRepeat: setRandomPos
         });
 
-        tl.fromTo(meteor, { opacity: 0, x: 0, y: 0 }, { opacity: 1, duration: 0.1 })
+        tl.fromTo(meteor, {
+            opacity: 0,
+            x: 0,
+            y: 0
+        }, {
+            opacity: 1,
+            duration: 0.1
+        })
             .to(meteor, {
                 x: -300,
                 y: 300,
@@ -269,7 +325,6 @@ if (meteorContainer) {
 
 // Custom Cursor Logic
 const cursor = document.getElementById('cursor');
-const magneticElements = document.querySelectorAll('a, button, .magnetic');
 
 document.addEventListener('mousemove', (e) => {
     gsap.to(cursor, {
@@ -281,7 +336,6 @@ document.addEventListener('mousemove', (e) => {
 });
 
 // Magnetic Effect
-// Refresh selector to include dynamic buttons
 const initMagnetic = () => {
     const freshMagneticElements = document.querySelectorAll('a, button, .magnetic');
     freshMagneticElements.forEach((el) => {
@@ -291,7 +345,10 @@ const initMagnetic = () => {
             const y = e.clientY - rect.top - rect.height / 2;
 
             // Scale cursor up on hover
-            gsap.to(cursor, { scale: 3, duration: 0.3 });
+            gsap.to(cursor, {
+                scale: 3,
+                duration: 0.3
+            });
 
             // Magnetic pull
             gsap.to(el, {
@@ -303,19 +360,69 @@ const initMagnetic = () => {
         });
 
         el.addEventListener('mouseleave', () => {
-            gsap.to(cursor, { scale: 1, duration: 0.3 });
-            gsap.to(el, { x: 0, y: 0, duration: 0.5, ease: "elastic.out(1, 0.3)" });
+            gsap.to(cursor, {
+                scale: 1,
+                duration: 0.3
+            });
+            gsap.to(el, {
+                x: 0,
+                y: 0,
+                duration: 0.5,
+                ease: "elastic.out(1, 0.3)"
+            });
+        });
+
+        // Add magnetic-wrap class if not present for styling hooks (optional)
+        el.classList.add('magnetic-wrap');
+    });
+}
+initMagnetic();
+
+
+// 3D Tilt Effect for Cards
+const initTilt = () => {
+    const tiltElements = document.querySelectorAll('.product-card, .showcase-card, .highlight-card');
+
+    tiltElements.forEach(el => {
+        el.addEventListener('mousemove', (e) => {
+            const rect = el.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+
+            // Calculate rotation strength (max 5-7 degrees)
+            const rotateX = ((y - centerY) / centerY) * -5;
+            const rotateY = ((x - centerX) / centerX) * 5;
+
+            gsap.to(el, {
+                transformPerspective: 1000,
+                rotateX: rotateX,
+                rotateY: rotateY,
+                scale: 1.02,
+                duration: 0.4,
+                ease: "power2.out"
+            });
+        });
+
+        el.addEventListener('mouseleave', () => {
+            gsap.to(el, {
+                rotateX: 0,
+                rotateY: 0,
+                scale: 1,
+                duration: 0.5,
+                ease: "power2.out"
+            });
         });
     });
 }
-// Init initially and after dynamic content
-initMagnetic();
+initTilt();
 
 
 // Text Reveal Animation
 const splitTextElements = document.querySelectorAll("h1, h2");
 splitTextElements.forEach(el => {
-    // Simple split text simulation w/o plugin
     const text = el.textContent;
     el.innerHTML = "";
     text.split("").forEach(char => {
@@ -378,7 +485,8 @@ gsap.utils.toArray('img').forEach(img => {
 
 // Scroll Progress Indicator
 const progressBar = document.createElement('div');
-progressBar.classList.add('fixed', 'top-0', 'left-0', 'h-1', 'bg-gradient-to-r', 'from-accent', 'to-neon', 'z-[10000]', 'pointer-events-none');
+progressBar.classList.add('fixed', 'top-0', 'left-0', 'h-1', 'bg-gradient-to-r', 'from-accent', 'to-neon', 'pointer-events-none');
+progressBar.style.zIndex = '10000'; // Ensure it's on top
 progressBar.style.width = '0%';
 document.body.appendChild(progressBar);
 
