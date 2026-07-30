@@ -22,14 +22,10 @@ import {
   Eye,
   LogOut,
   ShieldCheck,
-  Building2,
-  GraduationCap,
   Filter,
-  CheckCircle,
   AlertCircle,
   FileSpreadsheet,
   FileText,
-  Lock,
   Mail,
   Key,
   X,
@@ -37,7 +33,6 @@ import {
   ChevronRight,
   Sun,
   Moon,
-  Sparkles,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -46,30 +41,30 @@ import * as XLSX from 'xlsx';
 import Papa from 'papaparse';
 import imageCompression from 'browser-image-compression';
 
-import { Student, StudentStatus } from '@/lib/studentTypes';
-import { studentService, isFirebaseConfigured } from '@/lib/firebase';
+import { Student } from '@/lib/studentTypes';
+import { studentService } from '@/lib/firebase';
 import { generateQRCodeDataUrl, downloadQRCodePNG } from '@/lib/qrGenerator';
 
-// Zod Validation Schema for Student
+// Flexible Zod Validation Schema - Only studentId and name are required
 const studentSchema = z.object({
-  studentId: z.string().min(3, 'Student ID must be at least 3 characters'),
+  studentId: z.string().min(2, 'Student ID is required'),
   name: z.string().min(2, 'Name is required'),
-  institution: z.string().min(2, 'Institution is required'),
-  department: z.string().min(2, 'Department is required'),
-  course: z.string().min(2, 'Course is required'),
-  semester: z.string().min(1, 'Semester is required'),
-  section: z.string().min(1, 'Section is required'),
-  rollNumber: z.string().min(1, 'Roll Number is required'),
-  bloodGroup: z.string().min(1, 'Blood Group is required'),
-  dob: z.string().optional(),
-  parentName: z.string().min(2, 'Parent Name is required'),
-  phone: z.string().min(10, 'Valid phone number required'),
-  email: z.string().email('Valid email required'),
-  address: z.string().min(5, 'Address is required'),
-  admissionYear: z.string().min(4, 'Admission year required'),
+  institution: z.string().optional().default(''),
+  department: z.string().optional().default(''),
+  course: z.string().optional().default(''),
+  semester: z.string().optional().default(''),
+  section: z.string().optional().default(''),
+  rollNumber: z.string().optional().default(''),
+  bloodGroup: z.string().optional().default(''),
+  dob: z.string().optional().default(''),
+  parentName: z.string().optional().default(''),
+  phone: z.string().optional().default(''),
+  email: z.string().optional().default(''),
+  address: z.string().optional().default(''),
+  admissionYear: z.string().optional().default(''),
   status: z.enum(['active', 'inactive']),
-  issueDate: z.string().min(4, 'Issue date required'),
-  expiryDate: z.string().optional(),
+  issueDate: z.string().optional().default(''),
+  expiryDate: z.string().optional().default(''),
 });
 
 type StudentFormInputs = z.infer<typeof studentSchema>;
@@ -96,7 +91,6 @@ export default function AdminDashboardPage() {
   // UI Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
-  const [viewingStudent, setViewingStudent] = useState<Student | null>(null);
   const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
   const [printingStudent, setPrintingStudent] = useState<Student | null>(null);
   const [qrModalStudent, setQrModalStudent] = useState<Student | null>(null);
@@ -118,18 +112,18 @@ export default function AdminDashboardPage() {
     defaultValues: {
       studentId: '',
       name: '',
-      institution: 'SIRAQ National Institute of Technology',
-      department: 'Computer Science & Engineering',
-      course: 'Bachelor of Technology (B.Tech)',
-      semester: 'Semester 1',
-      section: 'Section A',
+      institution: '',
+      department: '',
+      course: '',
+      semester: '',
+      section: '',
       rollNumber: '',
-      bloodGroup: 'O+',
+      bloodGroup: '',
       parentName: '',
       phone: '',
       email: '',
       address: '',
-      admissionYear: '2026',
+      admissionYear: '',
       status: 'active',
       issueDate: new Date().toISOString().split('T')[0],
       expiryDate: '',
@@ -185,7 +179,6 @@ export default function AdminDashboardPage() {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
 
-    // Compress image
     try {
       setUploadingPhoto(true);
       const options = {
@@ -211,21 +204,21 @@ export default function AdminDashboardPage() {
     setPhotoPreview(student.photo || '');
     setValue('studentId', student.studentId);
     setValue('name', student.name);
-    setValue('institution', student.institution);
-    setValue('department', student.department);
-    setValue('course', student.course);
-    setValue('semester', student.semester);
-    setValue('section', student.section);
-    setValue('rollNumber', student.rollNumber);
-    setValue('bloodGroup', student.bloodGroup);
+    setValue('institution', student.institution || '');
+    setValue('department', student.department || '');
+    setValue('course', student.course || '');
+    setValue('semester', student.semester || '');
+    setValue('section', student.section || '');
+    setValue('rollNumber', student.rollNumber || '');
+    setValue('bloodGroup', student.bloodGroup || '');
     setValue('dob', student.dob || '');
-    setValue('parentName', student.parentName);
-    setValue('phone', student.phone);
-    setValue('email', student.email);
-    setValue('address', student.address);
-    setValue('admissionYear', student.admissionYear);
+    setValue('parentName', student.parentName || '');
+    setValue('phone', student.phone || '');
+    setValue('email', student.email || '');
+    setValue('address', student.address || '');
+    setValue('admissionYear', student.admissionYear || '');
     setValue('status', student.status);
-    setValue('issueDate', student.issueDate);
+    setValue('issueDate', student.issueDate || '');
     setValue('expiryDate', student.expiryDate || '');
     setIsAddModalOpen(true);
   };
@@ -238,19 +231,19 @@ export default function AdminDashboardPage() {
     setPhotoPreview(student.photo || '');
     setValue('studentId', newId);
     setValue('name', `${student.name} (Copy)`);
-    setValue('institution', student.institution);
-    setValue('department', student.department);
-    setValue('course', student.course);
-    setValue('semester', student.semester);
-    setValue('section', student.section);
-    setValue('rollNumber', `${student.rollNumber}-C`);
-    setValue('bloodGroup', student.bloodGroup);
+    setValue('institution', student.institution || '');
+    setValue('department', student.department || '');
+    setValue('course', student.course || '');
+    setValue('semester', student.semester || '');
+    setValue('section', student.section || '');
+    setValue('rollNumber', student.rollNumber ? `${student.rollNumber}-C` : '');
+    setValue('bloodGroup', student.bloodGroup || '');
     setValue('dob', student.dob || '');
-    setValue('parentName', student.parentName);
-    setValue('phone', student.phone);
-    setValue('email', student.email);
-    setValue('address', student.address);
-    setValue('admissionYear', student.admissionYear);
+    setValue('parentName', student.parentName || '');
+    setValue('phone', student.phone || '');
+    setValue('email', student.email || '');
+    setValue('address', student.address || '');
+    setValue('admissionYear', student.admissionYear || '');
     setValue('status', 'active');
     setValue('issueDate', new Date().toISOString().split('T')[0]);
     setValue('expiryDate', student.expiryDate || '');
@@ -268,8 +261,25 @@ export default function AdminDashboardPage() {
 
       const now = new Date().toISOString();
       const payload: Omit<Student, 'id'> = {
-        ...data,
+        studentId: data.studentId.trim().toUpperCase(),
+        name: data.name.trim(),
         photo: finalPhotoUrl,
+        institution: data.institution?.trim() || '',
+        department: data.department?.trim() || '',
+        course: data.course?.trim() || '',
+        semester: data.semester?.trim() || '',
+        section: data.section?.trim() || '',
+        rollNumber: data.rollNumber?.trim() || '',
+        bloodGroup: data.bloodGroup?.trim() || '',
+        dob: data.dob || '',
+        parentName: data.parentName?.trim() || '',
+        phone: data.phone?.trim() || '',
+        email: data.email?.trim() || '',
+        address: data.address?.trim() || '',
+        admissionYear: data.admissionYear?.trim() || '',
+        status: data.status,
+        issueDate: data.issueDate || new Date().toISOString().split('T')[0],
+        expiryDate: data.expiryDate || '',
         scanCount: editingStudent?.scanCount || 0,
         lastScannedAt: editingStudent?.lastScannedAt,
         createdAt: editingStudent?.createdAt || now,
@@ -348,19 +358,19 @@ export default function AdminDashboardPage() {
           studentId: String(row.StudentId || row.studentId || `ST2026${String(students.length + idx + 1).padStart(5, '0')}`).trim().toUpperCase(),
           name: String(row.Name || row.name || 'Unnamed Student'),
           photo: String(row.Photo || row.photo || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80'),
-          institution: String(row.Institution || row.institution || 'SIRAQ Institute'),
-          department: String(row.Department || row.department || 'Computer Science'),
-          course: String(row.Course || row.course || 'B.Tech'),
-          semester: String(row.Semester || row.semester || 'Semester 1'),
-          section: String(row.Section || row.section || 'Section A'),
-          rollNumber: String(row.RollNumber || row.rollNumber || `RN${idx + 1}`),
-          bloodGroup: String(row.BloodGroup || row.bloodGroup || 'O+'),
-          dob: String(row.DOB || row.dob || '2004-01-01'),
-          parentName: String(row.ParentName || row.parentName || 'Parent Name'),
-          phone: String(row.Phone || row.phone || '+91 98765 43210'),
-          email: String(row.Email || row.email || 'student@siraq.edu.in'),
-          address: String(row.Address || row.address || 'Address line'),
-          admissionYear: String(row.AdmissionYear || row.admissionYear || '2026'),
+          institution: String(row.Institution || row.institution || ''),
+          department: String(row.Department || row.department || ''),
+          course: String(row.Course || row.course || ''),
+          semester: String(row.Semester || row.semester || ''),
+          section: String(row.Section || row.section || ''),
+          rollNumber: String(row.RollNumber || row.rollNumber || ''),
+          bloodGroup: String(row.BloodGroup || row.bloodGroup || ''),
+          dob: String(row.DOB || row.dob || ''),
+          parentName: String(row.ParentName || row.parentName || ''),
+          phone: String(row.Phone || row.phone || ''),
+          email: String(row.Email || row.email || ''),
+          address: String(row.Address || row.address || ''),
+          admissionYear: String(row.AdmissionYear || row.admissionYear || ''),
           status: 'active',
           issueDate: new Date().toISOString().split('T')[0],
           scanCount: 0,
@@ -375,7 +385,7 @@ export default function AdminDashboardPage() {
         alert(`Successfully imported ${formattedList.length} student records!`);
       } catch (err) {
         console.error('Bulk upload error:', err);
-        alert('Failed to parse Excel/CSV file. Ensure column names match schema.');
+        alert('Failed to parse Excel/CSV file.');
       }
     };
 
@@ -387,19 +397,19 @@ export default function AdminDashboardPage() {
     const exportRows = filteredStudents.map((s) => ({
       StudentID: s.studentId,
       Name: s.name,
-      Institution: s.institution,
-      Department: s.department,
-      Course: s.course,
-      Semester: s.semester,
-      Section: s.section,
-      RollNumber: s.rollNumber,
-      BloodGroup: s.bloodGroup,
-      Phone: s.phone,
-      Email: s.email,
-      ParentName: s.parentName,
-      AdmissionYear: s.admissionYear,
+      Institution: s.institution || '',
+      Department: s.department || '',
+      Course: s.course || '',
+      Semester: s.semester || '',
+      Section: s.section || '',
+      RollNumber: s.rollNumber || '',
+      BloodGroup: s.bloodGroup || '',
+      Phone: s.phone || '',
+      Email: s.email || '',
+      ParentName: s.parentName || '',
+      AdmissionYear: s.admissionYear || '',
       Status: s.status,
-      IssueDate: s.issueDate,
+      IssueDate: s.issueDate || '',
       ExpiryDate: s.expiryDate || '',
       ScanCount: s.scanCount || 0,
     }));
@@ -429,7 +439,7 @@ export default function AdminDashboardPage() {
     return { total, active, inactive, expired };
   }, [students]);
 
-  // Unique Filter Options
+  // Filter Options
   const departments = useMemo(() => {
     return Array.from(new Set(students.map((s) => s.department))).filter(Boolean);
   }, [students]);
@@ -445,9 +455,9 @@ export default function AdminDashboardPage() {
         const matchesSearch =
           s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           s.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          s.phone.includes(searchTerm) ||
-          s.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          s.institution.toLowerCase().includes(searchTerm.toLowerCase());
+          (s.phone && s.phone.includes(searchTerm)) ||
+          (s.department && s.department.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (s.institution && s.institution.toLowerCase().includes(searchTerm.toLowerCase()));
 
         const matchesDept = filterDepartment === 'all' || s.department === filterDepartment;
         const matchesInst = filterInstitution === 'all' || s.institution === filterInstitution;
@@ -629,7 +639,6 @@ export default function AdminDashboardPage() {
           {/* Action Toolbar */}
           <div className={`p-6 rounded-3xl border ${isDarkMode ? 'bg-space/80 border-white/10' : 'bg-white border-slate-200'} space-y-4 shadow-xl`}>
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              {/* Search input */}
               <div className="relative w-full md:w-80">
                 <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slateSoft" />
                 <input
@@ -644,7 +653,6 @@ export default function AdminDashboardPage() {
                 />
               </div>
 
-              {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
                 <button
                   onClick={() => {
@@ -688,7 +696,6 @@ export default function AdminDashboardPage() {
                 <Filter className="w-3.5 h-3.5" /> Filters:
               </span>
 
-              {/* Dept Filter */}
               <select
                 value={filterDepartment}
                 onChange={(e) => setFilterDepartment(e.target.value)}
@@ -700,7 +707,6 @@ export default function AdminDashboardPage() {
                 ))}
               </select>
 
-              {/* Institution Filter */}
               <select
                 value={filterInstitution}
                 onChange={(e) => setFilterInstitution(e.target.value)}
@@ -712,7 +718,6 @@ export default function AdminDashboardPage() {
                 ))}
               </select>
 
-              {/* Status Filter */}
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
@@ -756,7 +761,6 @@ export default function AdminDashboardPage() {
                   ) : (
                     paginatedStudents.map((student) => (
                       <tr key={student.studentId} className="hover:bg-white/[0.02] transition">
-                        {/* Student Name & Photo */}
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-3">
                             <div className="w-11 h-11 rounded-2xl overflow-hidden border border-white/10 relative bg-slate-800 shrink-0">
@@ -770,26 +774,23 @@ export default function AdminDashboardPage() {
                             </div>
                             <div>
                               <p className="font-semibold text-white">{student.name}</p>
-                              <p className="text-xs text-slateSoft">{student.phone}</p>
+                              <p className="text-xs text-slateSoft">{student.phone || 'No phone'}</p>
                             </div>
                           </div>
                         </td>
 
-                        {/* ID & Roll */}
                         <td className="py-4 px-6">
                           <span className="font-mono font-bold text-accent text-xs bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-lg">
                             {student.studentId}
                           </span>
-                          <p className="text-xs text-slateSoft font-mono mt-1">{student.rollNumber}</p>
+                          <p className="text-xs text-slateSoft font-mono mt-1">{student.rollNumber || '—'}</p>
                         </td>
 
-                        {/* Institution & Dept */}
                         <td className="py-4 px-6">
-                          <p className="text-xs font-semibold text-white line-clamp-1">{student.institution}</p>
-                          <p className="text-[11px] text-slateSoft">{student.department}</p>
+                          <p className="text-xs font-semibold text-white line-clamp-1">{student.institution || '—'}</p>
+                          <p className="text-[11px] text-slateSoft">{student.department || '—'}</p>
                         </td>
 
-                        {/* Status Toggle Badge */}
                         <td className="py-4 px-6">
                           <button
                             onClick={() => handleToggleStatus(student)}
@@ -804,7 +805,6 @@ export default function AdminDashboardPage() {
                           </button>
                         </td>
 
-                        {/* QR & Print Card */}
                         <td className="py-4 px-6 text-center">
                           <div className="flex items-center justify-center gap-2">
                             <button
@@ -824,7 +824,6 @@ export default function AdminDashboardPage() {
                           </div>
                         </td>
 
-                        {/* Actions */}
                         <td className="py-4 px-6 text-right">
                           <div className="flex items-center justify-end gap-1.5">
                             <a
@@ -906,9 +905,12 @@ export default function AdminDashboardPage() {
                 className="w-full max-w-3xl glass rounded-3xl p-6 md:p-8 border border-white/20 shadow-2xl max-h-[90vh] overflow-y-auto space-y-6"
               >
                 <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                  <h2 className="text-xl font-bold font-display text-white">
-                    {editingStudent ? 'Edit Student Record' : 'Add New Verified Student'}
-                  </h2>
+                  <div>
+                    <h2 className="text-xl font-bold font-display text-white">
+                      {editingStudent ? 'Edit Student Record' : 'Add New Student'}
+                    </h2>
+                    <p className="text-xs text-slateSoft">Only Student ID and Name are required. Fill optional slots as needed.</p>
+                  </div>
                   <button onClick={() => setIsAddModalOpen(false)} className="text-slateSoft hover:text-white">
                     <X className="w-6 h-6" />
                   </button>
@@ -925,98 +927,97 @@ export default function AdminDashboardPage() {
                       )}
                     </div>
                     <div className="space-y-2 text-center sm:text-left">
-                      <p className="text-sm font-semibold text-white">Student Photo</p>
-                      <p className="text-xs text-slateSoft">Upload compressed PNG or JPG photo for ID card & profile.</p>
+                      <p className="text-sm font-semibold text-white">Student Photo (Optional)</p>
+                      <p className="text-xs text-slateSoft">Upload compressed PNG or JPG photo.</p>
                       <input type="file" accept="image/*" onChange={handlePhotoSelect} className="text-xs text-slateSoft file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-accent file:text-charcoal file:font-bold hover:file:opacity-90" />
                     </div>
                   </div>
 
                   {/* Form Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
-                    {/* Student ID */}
+                    {/* Student ID (Required) */}
                     <div className="space-y-1">
-                      <label className="font-semibold text-slateSoft uppercase">Student ID *</label>
+                      <label className="font-semibold text-accent uppercase">Student ID *</label>
                       <input {...register('studentId')} placeholder="ST202600001" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-accent" />
                       {errors.studentId && <p className="text-red-400 text-[11px]">{errors.studentId.message}</p>}
                     </div>
 
-                    {/* Name */}
+                    {/* Name (Required) */}
                     <div className="space-y-1">
-                      <label className="font-semibold text-slateSoft uppercase">Full Name *</label>
+                      <label className="font-semibold text-accent uppercase">Full Name *</label>
                       <input {...register('name')} placeholder="Aisha Rahman" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-accent" />
                       {errors.name && <p className="text-red-400 text-[11px]">{errors.name.message}</p>}
                     </div>
 
-                    {/* Institution */}
+                    {/* Institution (Optional) */}
                     <div className="space-y-1">
-                      <label className="font-semibold text-slateSoft uppercase">Institution *</label>
+                      <label className="font-semibold text-slateSoft uppercase">Institution (Optional)</label>
                       <input {...register('institution')} placeholder="SIRAQ Institute" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-accent" />
-                      {errors.institution && <p className="text-red-400 text-[11px]">{errors.institution.message}</p>}
                     </div>
 
-                    {/* Department */}
+                    {/* Department (Optional) */}
                     <div className="space-y-1">
-                      <label className="font-semibold text-slateSoft uppercase">Department *</label>
+                      <label className="font-semibold text-slateSoft uppercase">Department (Optional)</label>
                       <input {...register('department')} placeholder="Computer Science" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-accent" />
                     </div>
 
-                    {/* Course */}
+                    {/* Course (Optional) */}
                     <div className="space-y-1">
-                      <label className="font-semibold text-slateSoft uppercase">Course *</label>
+                      <label className="font-semibold text-slateSoft uppercase">Course (Optional)</label>
                       <input {...register('course')} placeholder="B.Tech" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-accent" />
                     </div>
 
-                    {/* Semester */}
+                    {/* Semester (Optional) */}
                     <div className="space-y-1">
-                      <label className="font-semibold text-slateSoft uppercase">Semester *</label>
+                      <label className="font-semibold text-slateSoft uppercase">Semester (Optional)</label>
                       <input {...register('semester')} placeholder="Semester 6" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-accent" />
                     </div>
 
-                    {/* Section */}
+                    {/* Section (Optional) */}
                     <div className="space-y-1">
-                      <label className="font-semibold text-slateSoft uppercase">Section *</label>
+                      <label className="font-semibold text-slateSoft uppercase">Section (Optional)</label>
                       <input {...register('section')} placeholder="Section A" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-accent" />
                     </div>
 
-                    {/* Roll Number */}
+                    {/* Roll Number (Optional) */}
                     <div className="space-y-1">
-                      <label className="font-semibold text-slateSoft uppercase">Roll Number *</label>
+                      <label className="font-semibold text-slateSoft uppercase">Roll Number (Optional)</label>
                       <input {...register('rollNumber')} placeholder="CS2026042" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-accent" />
                     </div>
 
-                    {/* Blood Group */}
+                    {/* Blood Group (Optional) */}
                     <div className="space-y-1">
-                      <label className="font-semibold text-slateSoft uppercase">Blood Group *</label>
+                      <label className="font-semibold text-slateSoft uppercase">Blood Group (Optional)</label>
                       <input {...register('bloodGroup')} placeholder="O+" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-accent" />
                     </div>
 
-                    {/* DOB */}
+                    {/* DOB (Optional) */}
                     <div className="space-y-1">
-                      <label className="font-semibold text-slateSoft uppercase">Date of Birth</label>
+                      <label className="font-semibold text-slateSoft uppercase">Date of Birth (Optional)</label>
                       <input type="date" {...register('dob')} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-accent" />
                     </div>
 
-                    {/* Parent Name */}
+                    {/* Parent Name (Optional) */}
                     <div className="space-y-1">
-                      <label className="font-semibold text-slateSoft uppercase">Parent Name *</label>
+                      <label className="font-semibold text-slateSoft uppercase">Parent Name (Optional)</label>
                       <input {...register('parentName')} placeholder="Tariq Rahman" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-accent" />
                     </div>
 
-                    {/* Phone */}
+                    {/* Phone (Optional) */}
                     <div className="space-y-1">
-                      <label className="font-semibold text-slateSoft uppercase">Phone *</label>
+                      <label className="font-semibold text-slateSoft uppercase">Phone (Optional)</label>
                       <input {...register('phone')} placeholder="+91 98765 43210" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-accent" />
                     </div>
 
-                    {/* Email */}
+                    {/* Email (Optional) */}
                     <div className="space-y-1">
-                      <label className="font-semibold text-slateSoft uppercase">Email *</label>
+                      <label className="font-semibold text-slateSoft uppercase">Email (Optional)</label>
                       <input type="email" {...register('email')} placeholder="student@siraq.edu.in" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-accent" />
                     </div>
 
-                    {/* Admission Year */}
+                    {/* Admission Year (Optional) */}
                     <div className="space-y-1">
-                      <label className="font-semibold text-slateSoft uppercase">Admission Year *</label>
+                      <label className="font-semibold text-slateSoft uppercase">Admission Year (Optional)</label>
                       <input {...register('admissionYear')} placeholder="2026" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-accent" />
                     </div>
 
@@ -1029,22 +1030,22 @@ export default function AdminDashboardPage() {
                       </select>
                     </div>
 
-                    {/* Issue Date */}
+                    {/* Issue Date (Optional) */}
                     <div className="space-y-1">
-                      <label className="font-semibold text-slateSoft uppercase">Issue Date *</label>
+                      <label className="font-semibold text-slateSoft uppercase">Issue Date (Optional)</label>
                       <input type="date" {...register('issueDate')} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-accent" />
                     </div>
 
-                    {/* Expiry Date */}
+                    {/* Expiry Date (Optional) */}
                     <div className="space-y-1">
                       <label className="font-semibold text-slateSoft uppercase">Expiry Date (Optional)</label>
                       <input type="date" {...register('expiryDate')} className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-accent" />
                     </div>
 
-                    {/* Address */}
+                    {/* Address (Optional) */}
                     <div className="space-y-1 sm:col-span-2 md:col-span-3">
-                      <label className="font-semibold text-slateSoft uppercase">Residential Address *</label>
-                      <input {...register('address')} placeholder="Full residential address" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-accent" />
+                      <label className="font-semibold text-slateSoft uppercase">Address (Optional)</label>
+                      <input {...register('address')} placeholder="Residential address" className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white outline-none focus:border-accent" />
                     </div>
                   </div>
 
@@ -1071,7 +1072,7 @@ export default function AdminDashboardPage() {
               </div>
               <h3 className="text-xl font-bold text-white">Delete Student Record?</h3>
               <p className="text-xs text-slateSoft">
-                Are you sure you want to delete <strong className="text-white">{deletingStudent.name}</strong> ({deletingStudent.studentId})? This action cannot be undone.
+                Are you sure you want to delete <strong className="text-white">{deletingStudent.name}</strong> ({deletingStudent.studentId})?
               </p>
               <div className="flex items-center justify-center gap-3 pt-2">
                 <button onClick={() => setDeletingStudent(null)} className="px-4 py-2 rounded-xl border border-white/10 text-xs font-semibold">
@@ -1129,14 +1130,13 @@ export default function AdminDashboardPage() {
                 </button>
               </div>
 
-              {/* ID Card Front View */}
               <div className="w-full rounded-2xl bg-gradient-to-br from-slate-900 via-space to-charcoal text-white p-5 border-2 border-accent/40 shadow-2xl relative overflow-hidden space-y-4">
                 <div className="flex items-center justify-between border-b border-white/20 pb-3">
                   <div className="flex items-center gap-2">
                     <ShieldCheck className="w-5 h-5 text-accent" />
                     <div>
                       <h4 className="font-bold text-sm tracking-wider font-display">SIRAQ VERIFIED</h4>
-                      <p className="text-[9px] text-slateSoft uppercase tracking-widest">{printingStudent.institution}</p>
+                      <p className="text-[9px] text-slateSoft uppercase tracking-widest">{printingStudent.institution || 'Official Institution'}</p>
                     </div>
                   </div>
                   <span className="text-[10px] font-mono font-bold text-accent bg-accent/20 px-2 py-0.5 rounded">
@@ -1154,15 +1154,15 @@ export default function AdminDashboardPage() {
                   </div>
                   <div className="space-y-1 text-xs">
                     <p className="font-bold text-base text-white">{printingStudent.name}</p>
-                    <p className="text-accent font-medium">{printingStudent.department}</p>
-                    <p className="text-slateSoft">{printingStudent.course}</p>
-                    <p className="text-slateSoft">Roll: {printingStudent.rollNumber}</p>
-                    <p className="text-red-400 font-bold">Blood: {printingStudent.bloodGroup}</p>
+                    {printingStudent.department && <p className="text-accent font-medium">{printingStudent.department}</p>}
+                    {printingStudent.course && <p className="text-slateSoft">{printingStudent.course}</p>}
+                    {printingStudent.rollNumber && <p className="text-slateSoft">Roll: {printingStudent.rollNumber}</p>}
+                    {printingStudent.bloodGroup && <p className="text-red-400 font-bold">Blood: {printingStudent.bloodGroup}</p>}
                   </div>
                 </div>
 
                 <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[10px] text-slateSoft">
-                  <span>Issued: {printingStudent.issueDate}</span>
+                  <span>Issued: {printingStudent.issueDate || '—'}</span>
                   <span className="text-emerald-400 font-bold">✓ VERIFIED STUDENT</span>
                 </div>
               </div>
