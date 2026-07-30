@@ -3,8 +3,10 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>SIRAQ — Creative Prints & Supplies</title>
+    <title>SIRAQ — Professional Print & Creative Services</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description"
+        content="Professional print services for ID cards, wedding invitations, posters, and custom creative works. Quality printing with fast delivery." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -39,6 +41,64 @@
 </head>
 
 <body class="hero-bg overflow-x-hidden antialiased">
+    <!-- Navigation Bar -->
+    <nav id="main-nav" class="fixed top-0 left-0 right-0 z-[100] transition-all duration-300">
+        <div class="container mx-auto px-6 py-4">
+            <div class="glass rounded-full px-6 py-3 flex items-center justify-between">
+                <!-- Logo -->
+                <a href="#hero" class="text-xl font-display font-bold text-white hover:text-accent transition">
+                    SIRAQ
+                </a>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center gap-8">
+                    <a href="#hero"
+                        class="nav-link text-sm font-medium text-slateSoft hover:text-white transition">Home</a>
+                    <a href="#services"
+                        class="nav-link text-sm font-medium text-slateSoft hover:text-white transition">Services</a>
+                    <a href="#showcase"
+                        class="nav-link text-sm font-medium text-slateSoft hover:text-white transition">Showcase</a>
+                    <a href="#faq"
+                        class="nav-link text-sm font-medium text-slateSoft hover:text-white transition">FAQ</a>
+                    <button onclick="openModal('about')"
+                        class="nav-link text-sm font-medium text-slateSoft hover:text-white transition">About</button>
+                    <button onclick="openModal('terms')"
+                        class="nav-link text-sm font-medium text-slateSoft hover:text-white transition">Policies</button>
+                    <a href="#contact"
+                        class="nav-link text-sm font-medium text-slateSoft hover:text-white transition">Contact</a>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-btn" class="md:hidden text-white focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="hidden md:hidden mt-4 glass rounded-3xl p-6">
+                <div class="flex flex-col gap-4">
+                    <a href="#hero"
+                        class="mobile-nav-link text-sm font-medium text-slateSoft hover:text-white transition">Home</a>
+                    <a href="#services"
+                        class="mobile-nav-link text-sm font-medium text-slateSoft hover:text-white transition">Services</a>
+                    <a href="#showcase"
+                        class="mobile-nav-link text-sm font-medium text-slateSoft hover:text-white transition">Showcase</a>
+                    <a href="#faq"
+                        class="mobile-nav-link text-sm font-medium text-slateSoft hover:text-white transition">FAQ</a>
+                    <button onclick="openModal('about')"
+                        class="mobile-nav-link text-left text-sm font-medium text-slateSoft hover:text-white transition">About</button>
+                    <button onclick="openModal('terms')"
+                        class="mobile-nav-link text-left text-sm font-medium text-slateSoft hover:text-white transition">Policies</button>
+                    <a href="#contact"
+                        class="mobile-nav-link text-sm font-medium text-slateSoft hover:text-white transition">Contact</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
     <!-- Film Grain -->
     <div class="film-grain"></div>
 
@@ -49,169 +109,752 @@
         </div>
         <div class="loader-bar"></div>
     </div>
+
+    <!-- Floating WhatsApp Button -->
+    <a href="#" id="whatsapp-fab"
+        class="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-[0_10px_40px_rgba(37,211,102,0.5)]"
+        aria-label="Contact us on WhatsApp">
+        <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+            <path
+                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+        </svg>
+    </a>
+
     <div class="pointer-events-none fixed inset-0 z-[1]">
-        <div id="meteors-container" class="absolute inset-0 overflow-hidden"></div>
         <div class="absolute top-[-10%] left-[10%] h-64 w-64 rounded-full bg-accent/20 blur-3xl"></div>
         <div class="absolute bottom-[-10%] right-[5%] h-72 w-72 rounded-full bg-neon/20 blur-3xl"></div>
     </div>
     <main class="relative z-10">
-        <section id="hero"
-            class="container mx-auto flex min-h-screen flex-wrap items-center px-6 py-20 lg:flex-nowrap lg:gap-16">
-            <div class="w-full space-y-6 text-center lg:w-1/2 lg:text-left">
-                <p class="font-medium uppercase tracking-[0.4em] text-slateSoft">Siraq Studio</p>
-                <h1 class="font-display text-4xl leading-tight sm:text-5xl">
-                    SIRAQ — <span class="text-accent">Creative Prints</span> & <span class="text-neon">Supplies</span>
-                </h1>
-                <p class="text-lg text-slateSoft">
-                    Modern design. Quality products. Brighter ideas. We blend premium materials with futuristic visuals
-                    to keep
-                    your brand unforgettable.
-                </p>
-                <div class="flex flex-wrap justify-center gap-4 lg:justify-start">
-                    <a href="#products"
-                        class="rounded-full bg-accent px-6 py-3 text-sm font-semibold uppercase tracking-wider text-charcoal shadow-glow transition hover:-translate-y-1">View
-                        Products</a>
-                    <a href="#showcase"
-                        class="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold uppercase tracking-wider text-white transition hover:-translate-y-1">View
-                        Works</a>
-                </div>
-            </div>
-            <div class="relative mt-10 w-full lg:mt-0 lg:w-1/2">
-                <div class="glass gradient-outline rounded-[30px] p-6 shadow-glass relative">
-                    <div class="border-beam"></div>
-                    <div class="aspect-[4/3] w-full overflow-hidden rounded-2xl">
-                        <img src="images/hero-image.jpg" alt="Creative print setup"
-                            class="h-full w-full object-cover" />
+        <!-- HERO SECTION -->
+        <section id="hero" class="container mx-auto flex min-h-screen items-center justify-center px-6 py-20">
+            <div class="w-full max-w-5xl mx-auto text-center">
+                <!-- Center Content -->
+                <div class="text-center">
+                    <p class="font-medium uppercase tracking-[0.4em] text-slateSoft animate-fade-in">Siraq Studio</p>
+                    <h1 class="font-display mt-6 text-5xl leading-tight sm:text-6xl lg:text-7xl xl:text-8xl font-bold">
+                        <span
+                            class="block bg-gradient-to-r from-white via-white to-slateSoft bg-clip-text text-transparent">
+                            Premium Custom Designs.
+                        </span>
+                        <span
+                            class="block mt-2 bg-gradient-to-r from-accent via-neon to-accent bg-clip-text text-transparent animate-gradient">
+                            Crafted with Care.
+                        </span>
+                    </h1>
+                    <p class="mt-8 max-w-3xl mx-auto text-lg sm:text-xl text-slateSoft leading-relaxed">
+                        Same premium quality across all plans. Quantity changes, quality never.
+                    </p>
+                    <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center">
+                        <a href="#services"
+                            class="inline-block rounded-full bg-gradient-to-r from-accent to-neon px-10 py-5 text-sm font-semibold uppercase tracking-wider text-charcoal shadow-glow transition hover:-translate-y-1 hover:shadow-[0_25px_50px_rgba(249,178,52,0.4)] hover:scale-105">
+                            Get Started
+                        </a>
+                        <a href="#" id="hero-whatsapp-btn"
+                            class="inline-flex items-center gap-3 rounded-full bg-[#25D366] px-10 py-5 text-sm font-semibold uppercase tracking-wider text-white shadow-lg transition hover:-translate-y-1 hover:shadow-[0_25px_50px_rgba(37,211,102,0.4)] hover:scale-105">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                            </svg>
+                            WhatsApp Order
+                        </a>
                     </div>
-                    <div class="mt-6 flex items-center justify-between text-sm text-slateSoft">
-                        <p>Siraq Premium Deck</p>
-                        <p class="text-white">Ultra HD Print • 2025</p>
+
+                    <!-- Trust Strip -->
+                    <div class="mt-8 flex flex-wrap justify-center items-center gap-4 text-xs text-slateSoft/90">
+                        <span class="flex items-center gap-2">
+                            <span class="text-accent">✓</span> 1200+ Orders
+                        </span>
+                        <span class="hidden sm:inline">•</span>
+                        <span class="flex items-center gap-2">
+                            <span class="text-accent">✓</span> Premium Quality
+                        </span>
+                        <span class="hidden sm:inline">•</span>
+                        <span class="flex items-center gap-2">
+                            <span class="text-accent">✓</span> Friendly Support
+                        </span>
+                        <span class="hidden sm:inline">•</span>
+                        <span class="flex items-center gap-2">
+                            <span class="text-accent">✓</span> Fixed Pricing
+                        </span>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Marquee Section -->
-        <section class="border-y border-white/5 bg-white/5 py-6">
-            <div class="marquee-container flex overflow-hidden">
-                <div class="marquee-content flex gap-12 items-center text-sm font-semibold uppercase tracking-[0.2em] text-slateSoft"
-                    id="marquee-track">
-                    <span>Premium Print Supply</span> <span class="text-neon">•</span>
-                    <span>Creative Studio</span> <span class="text-neon">•</span>
-                    <span>Global Shipping</span> <span class="text-neon">•</span>
-                    <span>Secure Fulfillment</span> <span class="text-neon">•</span>
-                    <span>Brand Identity</span> <span class="text-neon">•</span>
-                    <span>Premium Print Supply</span> <span class="text-neon">•</span>
-                    <span>Creative Studio</span> <span class="text-neon">•</span>
-                    <span>Global Shipping</span> <span class="text-neon">•</span>
-                    <span>Secure Fulfillment</span> <span class="text-neon">•</span>
-                    <span>Brand Identity</span> <span class="text-neon">•</span>
-                </div>
-            </div>
-        </section>
-
-        <section id="products" class="container mx-auto px-6 py-20">
+        <!-- SERVICES SECTION -->
+        <section id="services" class="container mx-auto px-6 py-20">
             <div class="mb-12 text-center">
-                <p class="text-xs uppercase tracking-[0.4em] text-slateSoft">Supply & Services</p>
-                <h2 class="font-display text-3xl">Bright prints, bold ideas.</h2>
+                <p class="text-xs uppercase tracking-[0.4em] text-slateSoft">What We Offer</p>
+                <h2 class="font-display mt-2 text-3xl lg:text-4xl">Our Services & Pricing</h2>
+                <p class="mt-4 text-slateSoft">Transparent pricing, premium quality</p>
             </div>
-            <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4" id="products-grid"></div>
+
+            <!-- ID Card Design -->
+            <div class="mb-16">
+                <h3 class="text-2xl font-display font-semibold text-center mb-8">ID Card Design</h3>
+                <div class="grid gap-6 md:grid-cols-2 max-w-4xl mx-auto">
+                    <!-- Normal ID Card -->
+                    <div class="glass rounded-3xl p-8 shadow-glass hover:shadow-glow-accent transition">
+                        <div class="mb-4 text-4xl">🪪</div>
+                        <h4 class="text-xl font-semibold mb-4">Normal ID Card</h4>
+                        <p class="text-sm text-slateSoft mb-4">Professional employee IDs, student cards, and access
+                            badges with premium finish.</p>
+
+                        <!-- Tiered Pricing -->
+                        <div class="space-y-3 mb-4">
+                            <div class="flex justify-between items-center border-b border-white/10 pb-2">
+                                <span class="text-sm text-slateSoft">100+ cards</span>
+                                <span class="text-lg font-bold text-accent">₹70<span
+                                        class="text-xs font-normal">/card</span></span>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-white/10 pb-2">
+                                <span class="text-sm text-slateSoft">500+ cards</span>
+                                <span class="text-lg font-bold text-accent">₹65<span
+                                        class="text-xs font-normal">/card</span></span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-slateSoft">1000+ cards</span>
+                                <span class="text-lg font-bold text-accent">₹60<span
+                                        class="text-xs font-normal">/card</span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Premium/Standard ID Card -->
+                    <div
+                        class="glass rounded-3xl p-8 shadow-glass hover:shadow-glow-accent transition border-2 border-accent/20">
+                        <div class="mb-4 text-4xl">⭐</div>
+                        <h4 class="text-xl font-semibold mb-4">Premium ID Card</h4>
+                        <p class="text-sm text-slateSoft mb-4">High-quality cards with advanced security features,
+                            holographic elements, and premium materials.</p>
+
+                        <!-- Tiered Pricing -->
+                        <div class="space-y-3 mb-4">
+                            <div class="flex justify-between items-center border-b border-white/10 pb-2">
+                                <span class="text-sm text-slateSoft">100+ cards</span>
+                                <span class="text-lg font-bold text-neon">₹120<span
+                                        class="text-xs font-normal">/card</span></span>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-white/10 pb-2">
+                                <span class="text-sm text-slateSoft">500+ cards</span>
+                                <span class="text-lg font-bold text-neon">₹110<span
+                                        class="text-xs font-normal">/card</span></span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-slateSoft">1000+ cards</span>
+                                <span class="text-lg font-bold text-neon">₹100<span
+                                        class="text-xs font-normal">/card</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-xs text-center text-slateSoft/80 mt-6">💡 Bulk discounts available. Contact us on
+                    WhatsApp for custom quantities and CEEP institution cards.</p>
+            </div>
+
+            <!-- Poster Design Monthly Plans -->
+            <div class="mb-8">
+                <h3 class="text-2xl font-display font-semibold text-center mb-4">Poster Design – Monthly Plans</h3>
+                <p class="text-center text-sm text-slateSoft mb-8">All plans provide the SAME premium quality</p>
+
+                <div class="grid gap-6 md:grid-cols-3 max-w-5xl mx-auto">
+                    <!-- Plan 1 -->
+                    <div class="glass rounded-3xl p-8 shadow-glass hover:shadow-glow transition relative">
+                        <div class="absolute top-4 right-4">
+                            <span
+                                class="bg-gradient-to-r from-accent to-neon text-charcoal text-xs font-bold px-3 py-1 rounded-full">Best
+                                Value</span>
+                        </div>
+                        <div class="mb-4 text-4xl">🎨</div>
+                        <h4 class="text-xl font-semibold mb-2">Starter Plan</h4>
+                        <div class="mb-4">
+                            <span class="text-4xl font-bold text-accent">₹499</span>
+                            <span class="text-sm text-slateSoft"> /month</span>
+                        </div>
+                        <p class="text-lg font-semibold mb-4">Up to 25 posters</p>
+                        <p class="text-sm text-slateSoft mb-6">Perfect for small businesses and startups needing regular
+                            marketing materials.</p>
+                        <a href="#order"
+                            class="block w-full text-center rounded-full bg-accent px-6 py-3 text-sm font-semibold uppercase tracking-wider text-charcoal transition hover:bg-accent/90">
+                            Get Started
+                        </a>
+                    </div>
+
+                    <!-- Plan 2 -->
+                    <div
+                        class="glass rounded-3xl p-8 shadow-glass hover:shadow-glow transition relative border-2 border-accent/30">
+                        <div class="absolute top-4 right-4">
+                            <span class="bg-neon text-charcoal text-xs font-bold px-3 py-1 rounded-full">Most
+                                Chosen</span>
+                        </div>
+                        <div class="mb-4 text-4xl">🚀</div>
+                        <h4 class="text-xl font-semibold mb-2">Growth Plan</h4>
+                        <div class="mb-4">
+                            <span class="text-4xl font-bold text-neon">₹699</span>
+                            <span class="text-sm text-slateSoft"> /month</span>
+                        </div>
+                        <p class="text-lg font-semibold mb-4">Up to 40 posters</p>
+                        <p class="text-sm text-slateSoft mb-6">Ideal for growing businesses with consistent design needs
+                            and marketing campaigns.</p>
+                        <a href="#order"
+                            class="block w-full text-center rounded-full bg-neon px-6 py-3 text-sm font-semibold uppercase tracking-wider text-charcoal transition hover:bg-neon/90">
+                            Get Started
+                        </a>
+                    </div>
+
+                    <!-- Plan 3 -->
+                    <div class="glass rounded-3xl p-8 shadow-glass hover:shadow-glow transition relative">
+                        <div class="absolute top-4 right-4">
+                            <span
+                                class="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full">Business</span>
+                        </div>
+                        <div class="mb-4 text-4xl">💼</div>
+                        <h4 class="text-xl font-semibold mb-2">Business Plan</h4>
+                        <div class="mb-4">
+                            <span class="text-4xl font-bold text-accent">₹1,199</span>
+                            <span class="text-sm text-slateSoft"> /month</span>
+                        </div>
+                        <p class="text-lg font-semibold mb-4">Up to 100 posters</p>
+                        <p class="text-sm text-slateSoft mb-6">For established businesses and agencies requiring
+                            high-volume professional designs.</p>
+                        <a href="#order"
+                            class="block w-full text-center rounded-full bg-accent px-6 py-3 text-sm font-semibold uppercase tracking-wider text-charcoal transition hover:bg-accent/90">
+                            Get Started
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quality Promise -->
+            <div class="glass rounded-2xl p-6 max-w-3xl mx-auto text-center mb-6">
+                <p class="text-sm font-semibold text-white mb-2">✨ Quality Promise</p>
+                <p class="text-sm text-slateSoft">We do not compromise on design quality. Pricing only affects quantity,
+                    not quality.</p>
+            </div>
+
+            <!-- Single Poster Note -->
+            <div class="text-center">
+                <p class="text-xs text-slateSoft/80">Single poster designs usually start from ₹30 depending on design
+                    complexity and time.</p>
+            </div>
         </section>
+
+        <!-- OUR WORKS SECTION -->
         <section id="showcase" class="container mx-auto px-6 py-20">
-            <div class="mb-12 flex flex-wrap items-center justify-between gap-6">
-                <div>
-                    <p class="text-xs uppercase tracking-[0.4em] text-slateSoft">Portfolio</p>
-                    <h2 class="font-display text-3xl">Showcase & Works</h2>
-                </div>
-                <p class="max-w-xl text-sm text-slateSoft">
-                    From vibrant product launches to bespoke ceremonial works, SIRAQ crafts experiences that live both
-                    in print
-                    and prestige.
-                </p>
+            <div class="mb-12 text-center">
+                <p class="text-xs uppercase tracking-[0.4em] text-slateSoft">Portfolio</p>
+                <h2 class="font-display mt-2 text-3xl lg:text-4xl">Our Works</h2>
+                <p class="mt-4 text-slateSoft">Real projects delivered with excellence</p>
             </div>
-            <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3" id="showcase-grid"></div>
-        </section>
-        <section class="container mx-auto px-6 pb-20">
-            <div class="glass rounded-[32px] p-10 shadow-glass">
-                <div class="mb-8 text-center">
-                    <p class="text-xs uppercase tracking-[0.4em] text-slateSoft">Why choose Siraq</p>
-                    <h2 class="font-display text-3xl">Premium by default.</h2>
-                </div>
-                <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4" id="highlights-grid"></div>
+
+            <!-- Category Filter -->
+            <div class="mb-8 flex flex-wrap justify-center gap-3" id="category-filters">
+                <button
+                    class="category-filter active rounded-full border border-white/20 bg-white/10 px-6 py-2 text-sm font-medium uppercase tracking-wider text-white transition hover:border-accent/50 hover:bg-accent/10"
+                    data-category="all">
+                    All Works
+                </button>
+                <button
+                    class="category-filter rounded-full border border-white/20 bg-transparent px-6 py-2 text-sm font-medium uppercase tracking-wider text-slateSoft transition hover:border-accent/50 hover:bg-accent/10 hover:text-white"
+                    data-category="id-cards">
+                    ID Cards
+                </button>
+                <button
+                    class="category-filter rounded-full border border-white/20 bg-transparent px-6 py-2 text-sm font-medium uppercase tracking-wider text-slateSoft transition hover:border-accent/50 hover:bg-accent/10 hover:text-white"
+                    data-category="wedding-cards">
+                    Wedding Cards
+                </button>
+                <button
+                    class="category-filter rounded-full border border-white/20 bg-transparent px-6 py-2 text-sm font-medium uppercase tracking-wider text-slateSoft transition hover:border-accent/50 hover:bg-accent/10 hover:text-white"
+                    data-category="posters">
+                    Posters
+                </button>
             </div>
+
+            <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" id="showcase-grid"></div>
         </section>
-        <section class="container mx-auto px-6 pb-20" id="order">
-            <div class="grid items-center gap-10 lg:grid-cols-2">
-                <div>
-                    <p class="text-xs uppercase tracking-[0.4em] text-slateSoft">Start a project</p>
-                    <h2 class="font-display text-3xl">Upload / Order form</h2>
-                    <p class="mt-4 max-w-md text-sm text-slateSoft">
-                        Share your files, reference links, or event details. We’ll prepare proofs, timelines, and supply
-                        options in
-                        under 24 hours.
+
+        <!-- HOW IT WORKS SECTION -->
+        <section id="how-it-works" class="container mx-auto px-6 py-20">
+            <div class="mb-16 text-center">
+                <p class="text-xs uppercase tracking-[0.4em] text-slateSoft">Process</p>
+                <h2 class="font-display mt-2 text-3xl lg:text-4xl">How It Works</h2>
+                <p class="mt-4 text-slateSoft">Simple, fast, and professional</p>
+            </div>
+
+            <div class="relative grid gap-8 md:grid-cols-3">
+                <!-- Connecting Line (hidden on mobile) -->
+                <div class="absolute top-16 left-0 right-0 hidden h-0.5 bg-gradient-to-r from-accent via-neon to-accent opacity-20 md:block"
+                    style="width: calc(100% - 8rem); left: 4rem;"></div>
+
+                <!-- Step 1 -->
+                <div class="glass relative rounded-3xl p-8 text-center">
+                    <div
+                        class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-accent to-accent/50 text-2xl font-bold text-charcoal shadow-glow-accent">
+                        1
+                    </div>
+                    <div class="mb-4 text-4xl">🎯</div>
+                    <h3 class="mb-3 text-xl font-semibold">Choose Service</h3>
+                    <p class="text-sm text-slateSoft">
+                        Select from ID cards, wedding invitations, posters, or custom creative works
                     </p>
                 </div>
-                <form class="glass rounded-[28px] p-8 shadow-glass">
-                    <div class="space-y-4">
-                        <label class="text-sm">
-                            <span class="mb-2 inline-block">Name</span>
-                            <input type="text" name="name" placeholder="Your full name"
-                                class="glass w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none transition focus:border-accent/50"
-                                required />
+
+                <!-- Step 2 -->
+                <div class="glass relative rounded-3xl p-8 text-center">
+                    <div
+                        class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-neon to-neon/50 text-2xl font-bold text-charcoal shadow-glow">
+                        2
+                    </div>
+                    <div class="mb-4 text-4xl">📝</div>
+                    <h3 class="mb-3 text-xl font-semibold">Submit Details</h3>
+                    <p class="text-sm text-slateSoft">
+                        Fill out the order form with your requirements and upload any reference files
+                    </p>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="glass relative rounded-3xl p-8 text-center">
+                    <div
+                        class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-accent to-neon text-2xl font-bold text-charcoal shadow-glow">
+                        3
+                    </div>
+                    <div class="mb-4 text-4xl">✨</div>
+                    <h3 class="mb-3 text-xl font-semibold">Review & Delivery</h3>
+                    <p class="text-sm text-slateSoft">
+                        We'll send proofs for approval, then deliver your finished products quickly
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ SECTION -->
+        <section id="faq" class="container mx-auto px-6 py-20">
+            <div class="mb-16 text-center">
+                <p class="text-xs uppercase tracking-[0.4em] text-slateSoft">Questions</p>
+                <h2 class="font-display mt-2 text-3xl lg:text-4xl">Frequently Asked Questions</h2>
+                <p class="mt-4 text-slateSoft">Everything you need to know</p>
+            </div>
+
+            <div class="max-w-3xl mx-auto space-y-4">
+                <!-- FAQ 1 -->
+                <div class="glass rounded-2xl overflow-hidden faq-item">
+                    <button
+                        class="faq-question w-full text-left p-6 flex justify-between items-center hover:bg-white/5 transition">
+                        <span class="font-semibold text-white pr-4">What is the cost of a single poster?</span>
+                        <svg class="faq-icon w-5 h-5 text-accent transition-transform duration-300" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                            </path>
+                        </svg>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6">
+                        <p class="text-sm text-slateSoft leading-relaxed">Single poster designs usually start from ₹30
+                            depending on design complexity and delivery time. For better value and consistent quality,
+                            we recommend our monthly plans which offer significant savings.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ 2 -->
+                <div class="glass rounded-2xl overflow-hidden faq-item">
+                    <button
+                        class="faq-question w-full text-left p-6 flex justify-between items-center hover:bg-white/5 transition">
+                        <span class="font-semibold text-white pr-4">Is quality different for lower-priced plans?</span>
+                        <svg class="faq-icon w-5 h-5 text-accent transition-transform duration-300" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                            </path>
+                        </svg>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6">
+                        <p class="text-sm text-slateSoft leading-relaxed">No. All plans receive the same premium-quality
+                            design. We maintain consistent quality standards across all pricing tiers. The only
+                            difference is the quantity of designs you receive per month. Quality never changes.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ 3 -->
+                <div class="glass rounded-2xl overflow-hidden faq-item">
+                    <button
+                        class="faq-question w-full text-left p-6 flex justify-between items-center hover:bg-white/5 transition">
+                        <span class="font-semibold text-white pr-4">Can I get discounts?</span>
+                        <svg class="faq-icon w-5 h-5 text-accent transition-transform duration-300" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                            </path>
+                        </svg>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6">
+                        <p class="text-sm text-slateSoft leading-relaxed">Special offers are available for bulk and
+                            long-term requirements. Please contact us on WhatsApp to discuss your specific needs and
+                            we'll provide the best possible pricing for your project.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ 4 -->
+                <div class="glass rounded-2xl overflow-hidden faq-item">
+                    <button
+                        class="faq-question w-full text-left p-6 flex justify-between items-center hover:bg-white/5 transition">
+                        <span class="font-semibold text-white pr-4">Why choose monthly plans?</span>
+                        <svg class="faq-icon w-5 h-5 text-accent transition-transform duration-300" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                            </path>
+                        </svg>
+                    </button>
+                    <div class="faq-answer hidden px-6 pb-6">
+                        <p class="text-sm text-slateSoft leading-relaxed">Monthly plans offer better value, faster
+                            delivery, and consistent designs. You save significantly compared to ordering individual
+                            posters, get priority processing, and maintain design consistency across all your marketing
+                            materials.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ORDER SECTION -->
+        <section class="container mx-auto px-6 pb-20" id="order">
+            <div class="glass rounded-[32px] p-8 shadow-glass lg:p-12">
+                <div class="mb-8 text-center">
+                    <p class="text-xs uppercase tracking-[0.4em] text-slateSoft">Get Started</p>
+                    <h2 class="font-display mt-2 text-3xl lg:text-4xl">Place Your Order</h2>
+                    <p class="mt-4 text-slateSoft">Fill out the form below and we'll get back to you within 24 hours</p>
+                </div>
+
+                <form class="mx-auto max-w-2xl" id="order-form">
+                    <div class="space-y-5">
+                        <label class="block text-sm">
+                            <span class="mb-2 inline-block font-medium">Service Type <span
+                                    class="text-accent">*</span></span>
+                            <select name="service" id="service-select" required
+                                class="glass w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none transition focus:border-accent/50">
+                                <option value="">Select a service...</option>
+                                <option value="id-cards">ID Cards</option>
+                                <option value="wedding-cards">Wedding Cards</option>
+                                <option value="posters">Posters & Designs</option>
+                            </select>
                         </label>
-                        <label class="text-sm">
-                            <span class="mb-2 inline-block">Phone</span>
-                            <input type="tel" name="phone" placeholder="+1 555 000 1234"
-                                class="glass w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none transition focus:border-accent/50"
-                                required />
+
+                        <label class="block text-sm">
+                            <span class="mb-2 inline-block font-medium">Your Name <span
+                                    class="text-accent">*</span></span>
+                            <input type="text" name="name" placeholder="John Doe" required
+                                class="glass w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none transition focus:border-accent/50" />
                         </label>
-                        <label class="text-sm">
-                            <span class="mb-2 inline-block">Message</span>
-                            <textarea name="message" rows="4" placeholder="Tell us about your project..."
+
+                        <div class="grid gap-5 sm:grid-cols-2">
+                            <label class="block text-sm">
+                                <span class="mb-2 inline-block font-medium">Email <span
+                                        class="text-accent">*</span></span>
+                                <input type="email" name="email" placeholder="john@example.com" required
+                                    class="glass w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none transition focus:border-accent/50" />
+                            </label>
+
+                            <label class="block text-sm">
+                                <span class="mb-2 inline-block font-medium">Phone <span
+                                        class="text-accent">*</span></span>
+                                <input type="tel" name="phone" placeholder="+91 98765 43210" required
+                                    class="glass w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none transition focus:border-accent/50" />
+                            </label>
+                        </div>
+
+                        <label class="block text-sm">
+                            <span class="mb-2 inline-block font-medium">Project Details <span
+                                    class="text-accent">*</span></span>
+                            <textarea name="message" rows="4"
+                                placeholder="Tell us about your project requirements, quantity, timeline, etc." required
                                 class="glass w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 outline-none transition focus:border-accent/50"></textarea>
                         </label>
+
                         <label class="block text-sm">
-                            <span class="mb-2 inline-block">Reference files</span>
-                            <input type="file"
-                                class="glass w-full rounded-2xl border border-dashed border-white/20 bg-white/5 px-4 py-6 text-sm text-slateSoft" />
+                            <span class="mb-2 inline-block font-medium">Reference Files (Optional)</span>
+                            <input type="file" multiple
+                                class="glass w-full rounded-2xl border border-dashed border-white/20 bg-white/5 px-4 py-6 text-sm text-slateSoft file:mr-4 file:rounded-full file:border-0 file:bg-accent file:px-4 file:py-2 file:text-xs file:font-semibold file:text-charcoal file:transition hover:file:bg-accent/90" />
                         </label>
+
+                        <p class="text-xs text-slateSoft/80 text-center">
+                            📱 You'll be redirected to WhatsApp to complete your order
+                        </p>
+
                         <button type="submit"
-                            class="mt-4 w-full rounded-full bg-gradient-to-r from-accent to-neon px-6 py-3 text-sm font-semibold uppercase tracking-wider text-charcoal shadow-glow transition hover:-translate-y-1">
-                            Submit Request
+                            class="mt-4 w-full rounded-full bg-gradient-to-r from-accent to-neon px-6 py-4 text-sm font-semibold uppercase tracking-wider text-charcoal shadow-glow transition hover:-translate-y-1">
+                            Place Order on WhatsApp
                         </button>
                     </div>
                 </form>
+
+                <!-- Success Message (hidden by default) -->
+                <div id="success-message"
+                    class="mx-auto mt-8 hidden max-w-2xl rounded-2xl border border-neon/30 bg-neon/10 p-6 text-center">
+                    <div class="mb-2 text-4xl">✅</div>
+                    <h3 class="mb-2 text-xl font-semibold text-neon">Redirecting to WhatsApp...</h3>
+                    <p class="text-sm text-slateSoft">
+                        Please continue your order on WhatsApp. We'll respond within 24 hours.
+                    </p>
+                </div>
             </div>
         </section>
-        <footer class="border-t border-white/10 bg-space/70 py-10">
-            <div
-                class="container mx-auto flex flex-wrap items-center justify-between gap-6 px-6 text-sm text-slateSoft">
-                <div>
-                    <p class="text-base font-semibold text-white">SIRAQ Studio</p>
-                    <p>Creative prints & supply lab • Est. 2026</p>
+
+        <!-- FOOTER / CONTACT -->
+        <footer id="contact" class="border-t border-white/10 bg-space/70 py-10">
+            <div class="container mx-auto px-6">
+                <div class="mb-6 text-center">
+                    <p class="text-sm text-slateSoft">For final pricing, custom requirements, or offers, please contact
+                        us on WhatsApp.</p>
                 </div>
-                <div class="flex gap-6">
-                    <a href="mailto:siraqstudio@gmail.com" class="transition hover:text-white">siraqstudio@gmail.com</a>
-                    <a href="tel:+918217469646" class="transition hover:text-white">+91 82174 69646</a>
+                <div class="flex flex-wrap items-center justify-between gap-6 text-sm text-slateSoft">
+                    <div>
+                        <p class="text-base font-semibold text-white">SIRAQ Studio</p>
+                        <p>Professional print & creative services • Est. 2026</p>
+                    </div>
+                    <div class="flex flex-col gap-2 sm:flex-row sm:gap-6">
+                        <a href="mailto:siraqstudio@gmail.com"
+                            class="transition hover:text-white">siraqstudio@gmail.com</a>
+                        <a href="tel:+918217469646" class="transition hover:text-white">+91 82174 69646</a>
+                    </div>
+                    <div class="flex gap-4 text-white">
+                        <a href="https://www.instagram.com/siraq.studio" target="_blank"
+                            class="transition hover:text-accent">Instagram</a>
+                    </div>
                 </div>
-                <div class="flex gap-4 text-white">
-                    <a href="https://www.instagram.com/siraq.studio" class="transition hover:text-accent">Instagram</a>
-                    <a href="#" class="transition hover:text-accent">Dribbble</a>
-                    <a href="#" class="transition hover:text-accent">Behance</a>
+                <div
+                    class="mt-6 flex flex-wrap justify-center gap-4 border-t border-white/10 pt-6 text-xs text-slateSoft">
+                    <button onclick="openModal('about')" class="transition hover:text-white cursor-pointer">About
+                        Us</button>
+                    <span>•</span>
+                    <button onclick="openModal('privacy')" class="transition hover:text-white cursor-pointer">Privacy
+                        Policy</button>
+                    <span>•</span>
+                    <button onclick="openModal('terms')" class="transition hover:text-white cursor-pointer">Terms &
+                        Conditions</button>
+                    <span>•</span>
+                    <span>© 2026 SIRAQ Studio. All rights reserved.</span>
                 </div>
             </div>
         </footer>
     </main>
 
-    <!-- Custom Cursor -->
-    <div id="cursor"
-        class="pointer-events-none fixed z-[9999] h-4 w-4 rounded-full bg-white mix-blend-difference transition-transform duration-100 ease-out">
+    <!-- Modal Overlays -->
+    <!-- About Us Modal -->
+    <div id="about-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button onclick="closeModal('about')" class="modal-close">✕</button>
+            <div class="modal-header">
+                <p class="text-xs uppercase tracking-[0.4em] text-slateSoft">Our Story</p>
+                <h2 class="font-display mt-2 text-3xl lg:text-4xl">About SIRAQ Studio</h2>
+            </div>
+            <div class="modal-body">
+                <p class="text-base leading-relaxed text-white mb-4">
+                    SIRAQ Studio is a professional print and creative services provider specializing in ID cards,
+                    wedding invitations, and custom design solutions.
+                </p>
+                <p class="text-sm leading-relaxed text-slateSoft mb-4">
+                    With over 1200+ successfully completed orders, we have established ourselves as a reliable partner
+                    for businesses and individuals seeking premium quality printing services. Our work is characterized
+                    by attention to detail, custom design capabilities, and competitive pricing without compromising on
+                    quality.
+                </p>
+                <p class="text-sm leading-relaxed text-slateSoft mb-4">
+                    We serve corporate clients requiring professional ID cards and branding materials, couples planning
+                    their wedding celebrations, and businesses needing marketing collateral. Each project receives
+                    dedicated attention and is executed with precision.
+                </p>
+                <p class="text-sm leading-relaxed text-slateSoft mb-6">
+                    Our commitment is to deliver exceptional results on time, every time. We maintain transparent
+                    communication throughout the project lifecycle and ensure our clients receive exactly what they
+                    envision.
+                </p>
+                <div class="grid gap-4 sm:grid-cols-3">
+                    <div class="rounded-xl border border-white/10 bg-white/5 p-4 text-center">
+                        <div class="mb-1 text-xl font-semibold text-accent">1200+</div>
+                        <p class="text-xs text-slateSoft">Orders Completed</p>
+                    </div>
+                    <div class="rounded-xl border border-white/10 bg-white/5 p-4 text-center">
+                        <div class="mb-1 text-xl font-semibold text-neon">Premium</div>
+                        <p class="text-xs text-slateSoft">Quality Standards</p>
+                    </div>
+                    <div class="rounded-xl border border-white/10 bg-white/5 p-4 text-center">
+                        <div class="mb-1 text-xl font-semibold text-accent">Best</div>
+                        <p class="text-xs text-slateSoft">Competitive Pricing</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Privacy Policy Modal -->
+    <div id="privacy-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button onclick="closeModal('privacy')" class="modal-close">✕</button>
+            <div class="modal-header">
+                <p class="text-xs uppercase tracking-[0.4em] text-slateSoft">Legal</p>
+                <h2 class="font-display mt-2 text-3xl lg:text-4xl">Privacy Policy</h2>
+                <p class="mt-2 text-sm text-slateSoft">Last updated: January 2026</p>
+            </div>
+            <div class="modal-body">
+                <div class="space-y-3">
+                    <div>
+                        <h3 class="mb-2 text-sm font-semibold text-white">Information Collection</h3>
+                        <p class="text-xs leading-relaxed text-slateSoft">
+                            We collect name, contact details, and project specifications provided during order
+                            placement. This information is used exclusively for order processing and project
+                            communication.
+                        </p>
+                    </div>
+                    <div>
+                        <h3 class="mb-2 text-sm font-semibold text-white">Data Usage</h3>
+                        <p class="text-xs leading-relaxed text-slateSoft">
+                            Your information is used to process orders, send design proofs, coordinate delivery, and
+                            provide support. We do not share, sell, or distribute your personal information to third
+                            parties.
+                        </p>
+                    </div>
+                    <div>
+                        <h3 class="mb-2 text-sm font-semibold text-white">Data Retention</h3>
+                        <p class="text-xs leading-relaxed text-slateSoft">
+                            Order information is retained for record-keeping and future service purposes. You may
+                            request data deletion by contacting us directly.
+                        </p>
+                    </div>
+                    <div>
+                        <h3 class="mb-2 text-sm font-semibold text-white">Security</h3>
+                        <p class="text-xs leading-relaxed text-slateSoft">
+                            We implement standard security measures to protect your information. While we take
+                            reasonable precautions, no digital transmission is completely secure.
+                        </p>
+                    </div>
+                    <div>
+                        <h3 class="mb-2 text-sm font-semibold text-white">Contact</h3>
+                        <p class="text-xs leading-relaxed text-slateSoft">
+                            For privacy-related inquiries: <a href="mailto:siraqstudio@gmail.com"
+                                class="text-accent hover:underline">siraqstudio@gmail.com</a> or <a
+                                href="tel:+918217469646" class="text-accent hover:underline">+91 82174 69646</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terms & Conditions Modal -->
+    <div id="terms-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button onclick="closeModal('terms')" class="modal-close">✕</button>
+            <div class="modal-header">
+                <p class="text-xs uppercase tracking-[0.4em] text-slateSoft">Legal</p>
+                <h2 class="font-display mt-2 text-3xl lg:text-4xl">Terms & Conditions</h2>
+                <p class="mt-2 text-sm text-slateSoft">Last updated: January 2026</p>
+            </div>
+            <div class="modal-body">
+                <div class="space-y-3">
+                    <div>
+                        <h3 class="mb-2 text-sm font-semibold text-white">Acceptance of Terms</h3>
+                        <p class="text-xs leading-relaxed text-slateSoft">
+                            By placing an order with SIRAQ Studio, you acknowledge and accept these terms and conditions
+                            in full. Orders are subject to availability and acceptance at our discretion.
+                        </p>
+                    </div>
+                    <div>
+                        <h3 class="mb-2 text-sm font-semibold text-white">Payment Terms</h3>
+                        <p class="text-xs leading-relaxed text-slateSoft">
+                            <strong>50% advance payment is mandatory</strong> before work commences. The remaining 50%
+                            must be paid before final delivery. No exceptions will be made to this policy. Pricing is
+                            fixed once confirmed and cannot be renegotiated after order confirmation.
+                        </p>
+                    </div>
+                    <div>
+                        <h3 class="mb-2 text-sm font-semibold text-white">Order Confirmation</h3>
+                        <p class="text-xs leading-relaxed text-slateSoft">
+                            Once an order is confirmed and advance payment is received, no changes, cancellations, or
+                            price disputes will be entertained. Confirmed specifications are final.
+                        </p>
+                    </div>
+                    <div>
+                        <h3 class="mb-2 text-sm font-semibold text-white">Design Approval</h3>
+                        <p class="text-xs leading-relaxed text-slateSoft">
+                            Digital proofs will be provided for approval before production. Once approved, you assume
+                            responsibility for any errors in the final product. Review all proofs carefully for
+                            accuracy.
+                        </p>
+                    </div>
+                    <div>
+                        <h3 class="mb-2 text-sm font-semibold text-white">Delivery Timeline</h3>
+                        <p class="text-xs leading-relaxed text-slateSoft">
+                            Turnaround times are estimates based on current workload. We strive to meet deadlines but
+                            cannot guarantee specific delivery dates. Rush orders may be accommodated at additional
+                            cost.
+                        </p>
+                    </div>
+                    <div>
+                        <h3 class="mb-2 text-sm font-semibold text-white">Cancellations & Refunds</h3>
+                        <p class="text-xs leading-relaxed text-slateSoft">
+                            Orders cannot be cancelled once production begins. Advance payments are non-refundable. If
+                            errors occur due to our fault, we will reprint at no additional charge.
+                        </p>
+                    </div>
+                    <div>
+                        <h3 class="mb-2 text-sm font-semibold text-white">Intellectual Property</h3>
+                        <p class="text-xs leading-relaxed text-slateSoft">
+                            You retain ownership of submitted content and confirm you have rights to all materials
+                            provided. By submitting content, you grant us permission to reproduce it for your order.
+                        </p>
+                    </div>
+                    <div>
+                        <h3 class="mb-2 text-sm font-semibold text-white">Dispute Resolution</h3>
+                        <p class="text-xs leading-relaxed text-slateSoft">
+                            Any disputes will be resolved through direct communication. Our decisions regarding order
+                            execution and quality standards are final.
+                        </p>
+                    </div>
+                    <div>
+                        <h3 class="mb-2 text-sm font-semibold text-white">Contact</h3>
+                        <p class="text-xs leading-relaxed text-slateSoft">
+                            Questions: <a href="mailto:siraqstudio@gmail.com"
+                                class="text-accent hover:underline">siraqstudio@gmail.com</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- External Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <script src="js/main.js"></script>
+
+    <!-- Tawk.to AI Chat Widget -->
+    <!--Start of Tawk.to Script-->
+    <script type="text/javascript">
+        var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
+        (function () {
+            var s1 = document.createElement("script"), s0 = document.getElementsByTagName("script")[0];
+            s1.async = true;
+            s1.src = 'https://embed.tawk.to/YOUR_PROPERTY_ID/YOUR_WIDGET_ID';
+            s1.charset = 'UTF-8';
+            s1.setAttribute('crossorigin', '*');
+            s0.parentNode.insertBefore(s1, s0);
+        })();
+
+        // Customize chat widget appearance
+        Tawk_API.onLoad = function () {
+            // Set custom styling to match brand
+            Tawk_API.setAttributes({
+                'name': 'SIRAQ Visitor',
+                'email': ''
+            }, function (error) { });
+        };
+    </script>
+    <!--End of Tawk.to Script-->
+
+    <!-- 
+    IMPORTANT: To activate the chat widget:
+    1. Go to https://www.tawk.to/ and create a free account
+    2. Create a new property for "SIRAQ Studio"
+    3. Copy your Property ID and Widget ID from the dashboard
+    4. Replace YOUR_PROPERTY_ID and YOUR_WIDGET_ID above with your actual IDs
+    5. Configure the AI assistant in Tawk.to dashboard with the training data from implementation_plan.md
+    -->
 </body>
 
 </html>
