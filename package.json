@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
-    "@next/swc-win32-x64-msvc": "^16.2.12",
     "browser-image-compression": "^2.0.2",
     "clsx": "^2.1.1",
     "firebase": "^10.13.0",
