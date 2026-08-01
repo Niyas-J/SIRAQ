@@ -113,7 +113,31 @@ export default function StudentVerificationPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-[10px]">
+            <a
+              href="/"
+              className={`hidden sm:inline-flex px-3 py-1.5 rounded-xl border text-xs font-semibold transition ${
+                isDarkMode ? 'border-white/10 bg-white/5 text-slate-300 hover:text-white' : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              Home
+            </a>
+            <a
+              href="/students"
+              className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition ${
+                isDarkMode ? 'border-cyan-500/30 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20' : 'border-cyan-500/30 bg-cyan-50 text-cyan-700 hover:bg-cyan-100'
+              }`}
+            >
+              Students Portal
+            </a>
+            <a
+              href="/admin"
+              className={`hidden sm:inline-flex px-3 py-1.5 rounded-xl border text-xs font-semibold transition ${
+                isDarkMode ? 'border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20' : 'border-amber-500/30 bg-amber-50 text-amber-700 hover:bg-amber-100'
+              }`}
+            >
+              Admin
+            </a>
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
               className={`p-2 rounded-full border transition ${

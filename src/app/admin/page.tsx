@@ -577,9 +577,22 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <a
+              href="/"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-semibold transition"
+            >
+              Home
+            </a>
+            <a
+              href="/students"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-semibold transition"
+            >
+              Students Portal
+            </a>
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
               className="p-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-accent transition"
+              title="Toggle Dark Mode"
             >
               {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
