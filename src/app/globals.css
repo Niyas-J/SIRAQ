@@ -110,3 +110,85 @@
 .modal-overlay.active {
     display: flex;
 }
+
+/* ============================================
+   APPLE-GRADE LOGO INTRO & KINETIC ANIMATIONS
+   ============================================ */
+@keyframes logoShine {
+    0% {
+        transform: translateX(-150%) skewX(-25deg);
+        opacity: 0;
+    }
+    40% {
+        opacity: 0.8;
+    }
+    100% {
+        transform: translateX(200%) skewX(-25deg);
+        opacity: 0;
+    }
+}
+
+.logo-shine {
+    position: relative;
+    overflow: hidden;
+}
+
+.logo-shine::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        60deg,
+        rgba(255, 255, 255, 0) 20%,
+        rgba(255, 255, 255, 0.4) 50%,
+        rgba(255, 255, 255, 0) 80%
+    );
+    animation: logoShine 3.5s infinite ease-in-out;
+    pointer-events: none;
+}
+
+@keyframes floatGentle {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-8px) rotate(0.5deg);
+    }
+}
+
+.animate-float-gentle {
+    animation: floatGentle 5s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 30px rgba(249, 178, 52, 0.25), 0 0 60px rgba(21, 244, 238, 0.15);
+    }
+    50% {
+        box-shadow: 0 0 50px rgba(249, 178, 52, 0.45), 0 0 90px rgba(21, 244, 238, 0.3);
+    }
+}
+
+.animate-pulse-glow {
+    animation: pulseGlow 4s ease-in-out infinite;
+}
+
+@keyframes starTwinkle {
+    0%, 100% {
+        transform: scale(0.9) rotate(0deg);
+        opacity: 0.7;
+    }
+    50% {
+        transform: scale(1.25) rotate(180deg);
+        opacity: 1;
+        filter: drop-shadow(0 0 8px #9cb81c);
+    }
+}
+
+.animate-star-twinkle {
+    animation: starTwinkle 2.5s ease-in-out infinite;
+}
+
