@@ -1,0 +1,11 @@
+{
+  "server_url": "http://localhost:3000",
+  "agent_key": "siraq-local-agent-key-2026",
+  "selected_printer": "Canon G3010 series",
+  "poll_interval_seconds": 5,
+  "heartbeat_interval_seconds": 10,
+  "auto_print_enabled": true,
+  "cleanup_temp_files": true,
+  "supported_extensions": [".pdf", ".jpg", ".jpeg", ".png"]
+}
+
