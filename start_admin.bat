@@ -15,13 +15,13 @@ start "SIRAQ Print Agent" /min cmd /c "python print-agent\siraq_print_agent.py"
 echo [2/3] Opening Admin Dashboard in browser...
 start http://localhost:3001/admin
 
-echo [3/3] Launching Local Next.js Server on port 3001...
-npx next start -p 3001
+echo [3/3] Launching Local Server on port 3001...
+npx next start -H 127.0.0.1 -p 3001
 
 if %errorlevel% neq 0 (
     echo.
-    echo Production server not built. Starting dev server on port 3001...
-    npx next dev -p 3001
+    echo Production build check. Starting dev server on 127.0.0.1:3001...
+    npx next dev -H 127.0.0.1 -p 3001
 )
 
 pause
