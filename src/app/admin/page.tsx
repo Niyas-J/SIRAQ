@@ -119,6 +119,7 @@ export default function AdminPage() {
   const [printJobsLoading, setPrintJobsLoading] = useState<boolean>(false);
   const [queueFilter, setQueueFilter] = useState<string>('all');
   const [selectedJobDetails, setSelectedJobDetails] = useState<PrintJob | null>(null);
+  const [directPrintingId, setDirectPrintingId] = useState<string>('');
 
   // Printer Management State
   const [printerStatus, setPrinterStatus] = useState<PrinterAgentStatus | null>(null);
@@ -472,6 +473,28 @@ export default function AdminPage() {
       loadPrintJobs();
     } catch (err: any) {
       alert(`Retry error: ${err.message}`);
+    }
+  };
+
+  // Direct Send to Physical Canon G3010 Spooler
+  const handleDirectPrint = async (jobId: string, orderNumber: string) => {
+    setDirectPrintingId(jobId);
+    try {
+      const res = await fetch('/api/agent/direct-print', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobId }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to dispatch to printer');
+      }
+      triggerNotice(`Order #${orderNumber} spooled directly to Canon PIXMA G3010!`);
+      loadPrintJobs();
+    } catch (err: any) {
+      alert(`Print error: ${err.message}`);
+    } finally {
+      setDirectPrintingId('');
     }
   };
 
@@ -1338,6 +1361,30 @@ export default function AdminPage() {
                           </td>
                           <td className="py-3.5 px-4 text-right">
                             <div className="flex items-center justify-end gap-2">
+                              {job.paymentStatus === 'PAID' && job.printStatus !== 'COMPLETED' && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDirectPrint(job.id, job.orderNumber)}
+                                  disabled={directPrintingId === job.id}
+                                  className="px-2.5 py-1 rounded-lg bg-[#F5D76E] hover:bg-[#eed063] text-[#25352B] font-bold text-xs flex items-center gap-1 shadow-sm transition disabled:opacity-50"
+                                  title="Immediately send document to physical Canon G3010 printer"
+                                >
+                                  <Printer className="w-3.5 h-3.5" />
+                                  <span>{directPrintingId === job.id ? 'Sending...' : 'Print Now'}</span>
+                                </button>
+                              )}
+                              {job.printStatus === 'COMPLETED' && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDirectPrint(job.id, job.orderNumber)}
+                                  disabled={directPrintingId === job.id}
+                                  className="px-2 py-1 rounded-lg bg-[#F5F9F5] border border-[#DDF1DF] text-[#477D55] hover:bg-[#DDF1DF] text-xs font-semibold flex items-center gap-1 transition"
+                                  title="Reprint this document"
+                                >
+                                  <Printer className="w-3 h-3" />
+                                  <span>Reprint</span>
+                                </button>
+                              )}
                               {job.printStatus === 'FAILED' && (
                                 <button
                                   onClick={() => handleRetryJob(job.id)}

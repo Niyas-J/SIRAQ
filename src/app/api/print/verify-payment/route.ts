@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import path from 'path';
+import fs from 'fs';
+import { execFile } from 'child_process';
 import { printStore } from '@/lib/printStore';
 
 export const dynamic = 'force-dynamic';
@@ -14,7 +17,6 @@ export async function POST(req: NextRequest) {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-      paymentMethod,
     } = body;
 
     if (!jobId) {
@@ -69,9 +71,47 @@ export async function POST(req: NextRequest) {
       signature: razorpay_signature,
     });
 
+    // Auto-spool directly to Canon G3010 if running on the shop Windows machine
+    if (process.platform === 'win32' && updatedJob) {
+      try {
+        const scriptPath = path.join(process.cwd(), 'print-agent', 'print_single_job.py');
+        let localFilePath = '';
+        if (updatedJob.documentUrl.startsWith('/uploads/')) {
+          localFilePath = path.join(process.cwd(), 'public', updatedJob.documentUrl);
+        } else if (fs.existsSync(updatedJob.documentUrl)) {
+          localFilePath = updatedJob.documentUrl;
+        }
+
+        if (localFilePath && fs.existsSync(localFilePath) && fs.existsSync(scriptPath)) {
+          execFile(
+            'python',
+            [
+              scriptPath,
+              localFilePath,
+              'Canon G3010 series',
+              (updatedJob.copies || 1).toString(),
+              updatedJob.pageRange || 'All',
+              `SIRAQ_${updatedJob.orderNumber}`,
+            ],
+            (err) => {
+              if (!err) {
+                printStore.updatePrintStatus(jobId, 'COMPLETED', {
+                  printerAssigned: 'Canon G3010 series',
+                });
+              } else {
+                console.warn('Auto print dispatch background error:', err);
+              }
+            }
+          );
+        }
+      } catch (dispErr) {
+        console.warn('Auto print dispatch error:', dispErr);
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      message: 'Payment verified successfully. Job entered print queue.',
+      message: 'Payment verified successfully. Job entered print queue and spooled to printer.',
       job: updatedJob,
     });
   } catch (error: any) {
@@ -79,4 +119,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
-

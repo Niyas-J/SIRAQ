@@ -1,14 +1,13 @@
 """
 =============================================================================
-SIRAQ SMART PRINT — WINDOWS 11 LOCAL PRINT AGENT
+SIRAQ SMART PRINT — WINDOWS 11 LOCAL PRINT AGENT (NATIVE GDI ENGINE)
 =============================================================================
 Tagline: SCAN. UPLOAD. PAY. PRINT.
-Printer: Canon PIXMA G3010 Series (and any Windows Spooler printer)
+Printer: Canon PIXMA G3010 Series
 OS: Windows 11 64-bit
 
-This background service connects the physical shop printer to the SIRAQ
-Cloud Smart Print queue. It receives approved/verified print orders,
-dispatches them to the Windows print spooler, and reports real-time status.
+Uses native Windows GDI + PyMuPDF high-resolution rendering for direct,
+zero-dependency silent printing to the Canon G3010 printer spooler.
 =============================================================================
 """
 
@@ -24,16 +23,11 @@ import urllib.error
 import urllib.parse
 from pathlib import Path
 
-# Optional pypdf for page counting and slicing
-try:
-    import pypdf
-    HAS_PYPDF = True
-except ImportError:
-    HAS_PYPDF = False
-
-# Optional win32print / ctypes winspool
-import ctypes
-from ctypes import wintypes
+# PyMuPDF and Windows GDI
+import pymupdf
+import win32print
+import win32ui
+from PIL import Image, ImageWin
 
 # Configure logging
 logging.basicConfig(
@@ -41,48 +35,45 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
         logging.StreamHandler(sys.stdout),
-        logging.FileHandler("siraq_agent.log", encoding="utf-8")
+        logging.FileHandler(str(Path(__file__).parent / "siraq_agent.log"), encoding="utf-8")
     ]
 )
 logger = logging.getLogger("SiraqPrintAgent")
 
+ROOT_DIR = Path(__file__).resolve().parent.parent
 CONFIG_FILE = Path(__file__).parent / "agent_config.json"
 HISTORY_FILE = Path(__file__).parent / "print_history.json"
 TEMP_DIR = Path(__file__).parent / "temp_downloads"
 TEMP_DIR.mkdir(exist_ok=True)
 
-EDGE_CANDIDATE_PATHS = [
-    Path("C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"),
-    Path("C:/Program Files/Microsoft/Edge/Application/msedge.exe"),
-]
-
-def find_edge_path():
-    for p in EDGE_CANDIDATE_PATHS:
-        if p.exists():
-            return str(p)
-    return None
-
 class SiraqPrintAgent:
     def __init__(self):
         self.config = self.load_config()
-        self.server_url = self.config.get("server_url", "http://localhost:3000").rstrip("/")
+        # Default servers to poll (local port 3001, 3000, and Vercel cloud)
+        configured_server = self.config.get("server_url", "http://localhost:3001").rstrip("/")
+        self.candidate_servers = [
+            configured_server,
+            "http://localhost:3001",
+            "http://localhost:3000",
+            "https://siraq.vercel.app"
+        ]
+        # remove duplicates preserving order
+        self.candidate_servers = list(dict.fromkeys(self.candidate_servers))
+        self.server_url = self.candidate_servers[0]
+
         self.agent_key = self.config.get("agent_key", "siraq-local-agent-key-2026")
         self.selected_printer = self.config.get("selected_printer", "Canon G3010 series")
-        self.poll_interval = self.config.get("poll_interval_seconds", 5)
+        self.poll_interval = self.config.get("poll_interval_seconds", 3)
         self.heartbeat_interval = self.config.get("heartbeat_interval_seconds", 10)
         self.auto_print = self.config.get("auto_print_enabled", True)
         self.history = self.load_history()
-        self.detected_printers = self.detect_printers()
-        self.edge_path = find_edge_path()
         self.last_heartbeat_time = 0
 
         logger.info("=" * 65)
         logger.info("  SIRAQ SMART PRINT — WINDOWS 11 PRINT AGENT INITIALIZED")
-        logger.info(f"  Target Server: {self.server_url}")
+        logger.info(f"  Primary Server: {self.server_url}")
         logger.info(f"  Selected Printer: {self.selected_printer}")
-        logger.info(f"  Detected Printers: {', '.join(self.detected_printers)}")
-        if self.edge_path:
-            logger.info(f"  Edge Silent PDF Engine: {self.edge_path}")
+        logger.info(f"  Candidate Servers: {', '.join(self.candidate_servers)}")
         logger.info("=" * 65)
 
     def load_config(self):
@@ -110,124 +101,116 @@ class SiraqPrintAgent:
         except Exception as e:
             logger.warning(f"Could not save history: {e}")
 
-    def detect_printers(self):
-        """Detect installed printers on Windows via PowerShell"""
-        try:
-            cmd = [
-                "powershell",
-                "-NoProfile",
-                "-Command",
-                "Get-Printer | Select-Object -ExpandProperty Name"
-            ]
-            res = subprocess.run(cmd, capture_output=True, text=True, timeout=8)
-            if res.returncode == 0:
-                lines = [line.strip() for line in res.stdout.splitlines() if line.strip()]
-                if lines:
-                    return lines
-        except Exception as e:
-            logger.debug(f"PowerShell Get-Printer fallback: {e}")
-
-        # Fallback list including Canon G3010
-        return ["Canon G3010 series", "Microsoft Print to PDF"]
-
     def is_printer_ready(self, printer_name):
-        """Check if printer exists and responds via winspool or detected list"""
-        # Test directly via winspool.drv
         try:
-            winspool = ctypes.WinDLL("winspool.drv", use_last_error=True)
-            handle = wintypes.HANDLE()
-            if winspool.OpenPrinterW(printer_name, ctypes.byref(handle), None):
-                winspool.ClosePrinter(handle)
-                return True
+            h = win32print.OpenPrinter(printer_name)
+            win32print.ClosePrinter(h)
+            return True
         except Exception:
-            pass
-
-        return any(printer_name.lower() in p.lower() for p in self.detected_printers)
+            return False
 
     def send_heartbeat(self):
-        """Send status heartbeat to backend"""
-        url = f"{self.server_url}/api/agent/heartbeat"
-        is_ready = self.is_printer_ready(self.selected_printer)
+        """Send status heartbeat to active backend"""
         payload = {
             "agentId": "shop-agent-win11-01",
             "computerName": platform.node(),
             "os": f"Windows 11 ({platform.platform()})",
-            "status": "ONLINE" if is_ready else "OFFLINE",
+            "status": "ONLINE" if self.is_printer_ready(self.selected_printer) else "OFFLINE",
             "selectedPrinter": self.selected_printer,
-            "availablePrinters": self.detected_printers,
+            "availablePrinters": [self.selected_printer],
             "defaultPrinter": self.selected_printer,
-            "version": "1.0.5-win11"
+            "version": "2.0.0-win11-gdi"
         }
 
-        try:
-            req = urllib.request.Request(
-                url,
-                data=json.dumps(payload).encode("utf-8"),
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {self.agent_key}"
-                },
-                method="POST"
-            )
-            with urllib.request.urlopen(req, timeout=5) as resp:
-                if resp.status == 200:
-                    self.last_heartbeat_time = time.time()
-                    return True
-        except Exception as e:
-            logger.debug(f"Heartbeat send notice: {e}")
+        for srv in self.candidate_servers:
+            url = f"{srv}/api/agent/heartbeat"
+            try:
+                req = urllib.request.Request(
+                    url,
+                    data=json.dumps(payload).encode("utf-8"),
+                    headers={
+                        "Content-Type": "application/json",
+                        "Authorization": f"Bearer {self.agent_key}"
+                    },
+                    method="POST"
+                )
+                with urllib.request.urlopen(req, timeout=3) as resp:
+                    if resp.status == 200:
+                        self.server_url = srv
+                        self.last_heartbeat_time = time.time()
+                        return True
+            except Exception:
+                continue
         return False
 
     def fetch_queued_jobs(self):
-        """Fetch approved print jobs from the backend"""
-        url = f"{self.server_url}/api/agent/jobs?limit=5"
-        try:
-            req = urllib.request.Request(
-                url,
-                headers={"Authorization": f"Bearer {self.agent_key}"},
-                method="GET"
-            )
-            with urllib.request.urlopen(req, timeout=6) as resp:
-                if resp.status == 200:
-                    data = json.loads(resp.read().decode("utf-8"))
-                    return data.get("jobs", [])
-        except Exception as e:
-            logger.debug(f"Fetch jobs notice: {e}")
+        """Fetch approved print jobs from the first responding server"""
+        for srv in self.candidate_servers:
+            url = f"{srv}/api/agent/jobs?limit=10"
+            try:
+                req = urllib.request.Request(
+                    url,
+                    headers={"Authorization": f"Bearer {self.agent_key}"},
+                    method="GET"
+                )
+                with urllib.request.urlopen(req, timeout=3) as resp:
+                    if resp.status == 200:
+                        data = json.loads(resp.read().decode("utf-8"))
+                        jobs = data.get("jobs", [])
+                        if jobs:
+                            self.server_url = srv
+                            return jobs
+            except Exception:
+                continue
         return []
 
     def update_job_status(self, job_id, status, error_message=None):
-        """Report printing status update back to server"""
-        url = f"{self.server_url}/api/agent/jobs"
+        """Report printing status update back to servers"""
         payload = {
             "jobId": job_id,
             "status": status,
             "printerAssigned": self.selected_printer,
             "errorMessage": error_message or ""
         }
-        try:
-            req = urllib.request.Request(
-                url,
-                data=json.dumps(payload).encode("utf-8"),
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {self.agent_key}"
-                },
-                method="POST"
-            )
-            with urllib.request.urlopen(req, timeout=5) as resp:
-                return resp.status == 200
-        except Exception as e:
-            logger.error(f"Failed to update job status for {job_id}: {e}")
-            return False
+        for srv in self.candidate_servers:
+            url = f"{srv}/api/agent/jobs"
+            try:
+                req = urllib.request.Request(
+                    url,
+                    data=json.dumps(payload).encode("utf-8"),
+                    headers={
+                        "Content-Type": "application/json",
+                        "Authorization": f"Bearer {self.agent_key}"
+                    },
+                    method="POST"
+                )
+                with urllib.request.urlopen(req, timeout=4) as resp:
+                    pass
+            except Exception:
+                pass
+        return True
 
-    def download_document(self, doc_url, filename):
-        """Download document securely to local temp folder"""
+    def resolve_document_file(self, doc_url, filename):
+        """Resolve file path locally first (instant), or download via HTTP"""
+        # 1. Check if relative to project public/ folder
+        if doc_url.startswith("/uploads/"):
+            local_candidate = ROOT_DIR / "public" / doc_url.lstrip("/")
+            if local_candidate.exists():
+                return local_candidate
+
+        # 2. Check if absolute path
+        p_cand = Path(doc_url)
+        if p_cand.exists():
+            return p_cand
+
+        # 3. Otherwise download via HTTP
         full_url = doc_url
         if not doc_url.startswith("http"):
-            full_url = f"{self.server_url}{doc_url if doc_url.startswith('/') else '/' + doc_url}"
+            full_url = f"{self.server_url}/{doc_url.lstrip('/')}"
 
         local_path = TEMP_DIR / f"{int(time.time())}_{filename}"
         try:
-            req = urllib.request.Request(full_url, headers={"User-Agent": "SiraqPrintAgent/1.0"})
+            req = urllib.request.Request(full_url, headers={"User-Agent": "SiraqPrintAgent/2.0"})
             with urllib.request.urlopen(req, timeout=30) as response, open(local_path, "wb") as out_file:
                 out_file.write(response.read())
             return local_path
@@ -235,96 +218,101 @@ class SiraqPrintAgent:
             logger.error(f"Download failed for {full_url}: {e}")
             return None
 
-    def slice_pdf_pages(self, pdf_path, page_range_str):
-        """Slice PDF if custom page range specified"""
-        if not HAS_PYPDF or not page_range_str or page_range_str.lower() == "all":
-            return pdf_path
-
-        try:
-            reader = pypdf.PdfReader(str(pdf_path))
-            writer = pypdf.PdfWriter()
-            total_pages = len(reader.pages)
-
-            # Parse pages like "1-3, 5" (1-indexed)
-            target_indices = set()
-            for part in page_range_str.split(","):
-                part = part.strip()
-                if "-" in part:
-                    s, e = part.split("-")
-                    for p in range(int(s), int(e) + 1):
-                        if 1 <= p <= total_pages:
-                            target_indices.add(p - 1)
-                elif part.isdigit():
-                    p = int(part)
-                    if 1 <= p <= total_pages:
-                        target_indices.add(p - 1)
-
-            for idx in sorted(target_indices):
-                writer.add_page(reader.pages[idx])
-
-            sliced_path = pdf_path.with_name(f"sliced_{pdf_path.name}")
-            with open(sliced_path, "wb") as f_out:
-                writer.write(f_out)
-            return sliced_path
-        except Exception as e:
-            logger.warning(f"Could not slice PDF: {e}, using original document")
-            return pdf_path
-
-    def print_to_windows(self, file_path, job):
-        """Send document to Windows Print Spooler with copies and settings"""
+    def print_file_to_canon(self, file_path, job):
+        """Direct native Windows GDI print spooler dispatch for Canon PIXMA G3010"""
         target_printer = self.selected_printer
         copies = max(1, int(job.get("copies", 1)))
         ext = file_path.suffix.lower()
-        page_range = job.get("pageRange", "All")
+        page_range_str = job.get("pageRange", "All")
+        color_mode = job.get("colorMode", "bw")
+        order_num = job.get("orderNumber", "JOB")
 
-        # Slice PDF if necessary
-        actual_file_to_print = file_path
+        logger.info(f"Opening native Printer DC for '{target_printer}'...")
+        hDC = win32ui.CreateDC()
+        hDC.CreatePrinterDC(target_printer)
+
+        printable_width = hDC.GetDeviceCaps(8)   # HORZRES
+        printable_height = hDC.GetDeviceCaps(10) # VERTRES
+        logger.info(f"Printable Canvas: {printable_width} x {printable_height} px")
+
+        # 1. Handle PDF
         if ext == ".pdf":
-            actual_file_to_print = self.slice_pdf_pages(file_path, page_range)
+            doc = pymupdf.open(str(file_path))
+            total_pages = len(doc)
+            logger.info(f"Loaded PDF with {total_pages} page(s). Range: {page_range_str}")
 
-        logger.info(f"Dispatching [{actual_file_to_print.name}] to '{target_printer}' ({copies} copies)")
-
-        for i in range(copies):
-            # Prefer Edge headless for PDF (silent, reliable, native Windows 11)
-            if ext == ".pdf" and self.edge_path:
-                try:
-                    cmd = [
-                        self.edge_path,
-                        "--headless",
-                        f"--print-to-printer={target_printer}",
-                        str(actual_file_to_print)
-                    ]
-                    res = subprocess.run(cmd, capture_output=True, text=True, timeout=25)
-                    if res.returncode == 0:
-                        logger.info(f"Copy {i+1}/{copies} sent silently via Edge to {target_printer}.")
-                    else:
-                        logger.warning(f"Edge print notice: {res.stderr}")
-                except Exception as ex:
-                    logger.warning(f"Edge print failed, falling back to Start-Process PrintTo: {ex}")
-                    self._fallback_powershell_print(actual_file_to_print, target_printer)
+            # Parse custom page range if any (1-indexed)
+            target_indices = []
+            if page_range_str and page_range_str.lower() != "all":
+                for part in page_range_str.split(","):
+                    part = part.strip()
+                    if "-" in part:
+                        try:
+                            s, e = part.split("-")
+                            for p in range(int(s), int(e) + 1):
+                                if 1 <= p <= total_pages:
+                                    target_indices.append(p - 1)
+                        except Exception:
+                            pass
+                    elif part.isdigit():
+                        p = int(part)
+                        if 1 <= p <= total_pages:
+                            target_indices.append(p - 1)
             else:
-                self._fallback_powershell_print(actual_file_to_print, target_printer)
+                target_indices = list(range(total_pages))
 
-            if i < copies - 1:
-                time.sleep(2)
+            if not target_indices:
+                target_indices = list(range(total_pages))
 
+            for copy_idx in range(copies):
+                doc_title = f"SIRAQ_{order_num}_{file_path.name}_Copy{copy_idx+1}"
+                hDC.StartDoc(doc_title)
+
+                for page_idx in target_indices:
+                    page = doc[page_idx]
+                    # Render page at 300 DPI for sharp crisp output
+                    pix = page.get_pixmap(dpi=300)
+                    img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+
+                    # Scale proportionally to fit printable area
+                    ratio = min(printable_width / img.width, printable_height / img.height)
+                    target_w = int(img.width * ratio)
+                    target_h = int(img.height * ratio)
+                    offset_x = (printable_width - target_w) // 2
+                    offset_y = (printable_height - target_h) // 2
+
+                    hDC.StartPage()
+                    dib = ImageWin.Dib(img)
+                    dib.draw(hDC.GetHandleOutput(), (offset_x, offset_y, offset_x + target_w, offset_y + target_h))
+                    hDC.EndPage()
+                    logger.info(f"Spooler received page {page_idx + 1} (Copy {copy_idx + 1}/{copies})")
+
+                hDC.EndDoc()
+
+            doc.close()
+
+        # 2. Handle JPG / PNG
+        elif ext in [".jpg", ".jpeg", ".png", ".bmp", ".webp"]:
+            img = Image.open(str(file_path)).convert("RGB")
+            for copy_idx in range(copies):
+                doc_title = f"SIRAQ_{order_num}_{file_path.name}_Copy{copy_idx+1}"
+                hDC.StartDoc(doc_title)
+
+                ratio = min(printable_width / img.width, printable_height / img.height)
+                target_w = int(img.width * ratio)
+                target_h = int(img.height * ratio)
+                offset_x = (printable_width - target_w) // 2
+                offset_y = (printable_height - target_h) // 2
+
+                hDC.StartPage()
+                dib = ImageWin.Dib(img)
+                dib.draw(hDC.GetHandleOutput(), (offset_x, offset_y, offset_x + target_w, offset_y + target_h))
+                hDC.EndPage()
+                hDC.EndDoc()
+                logger.info(f"Spooler received image (Copy {copy_idx + 1}/{copies})")
+
+        hDC.DeleteDC()
         return True
-
-    def _fallback_powershell_print(self, file_path, target_printer):
-        clean_file = str(file_path).replace("\\", "/")
-        ps_script = (
-            f'$file = "{clean_file}"; '
-            f'$printer = "{target_printer}"; '
-            'Start-Process -FilePath $file -Verb PrintTo -ArgumentList "`"$printer`"" -PassThru | Out-Null'
-        )
-        res = subprocess.run(
-            ["powershell", "-NoProfile", "-Command", ps_script],
-            capture_output=True,
-            text=True,
-            timeout=20
-        )
-        if res.returncode != 0:
-            logger.warning(f"PowerShell print warning: {res.stderr}")
 
     def process_job(self, job):
         job_id = job.get("id")
@@ -332,28 +320,28 @@ class SiraqPrintAgent:
 
         # Safeguard: prevent duplicate printing
         if job_id in self.history["processed_jobs"]:
-            logger.warning(f"Job {order_num} was already printed previously. Skipping duplicate.")
+            logger.info(f"Job {order_num} was already spooled. Skipping duplicate.")
             return
 
-        logger.info(f">>> Processing Print Order #{order_num} ({job.get('customerName')})")
+        logger.info(f">>> START PRINT ORDER #{order_num} ({job.get('customerName')})")
 
         # 1. Update status to PRINTING
         self.update_job_status(job_id, "PRINTING")
 
-        # 2. Download file
+        # 2. Resolve document file
         doc_url = job.get("documentUrl")
         doc_name = job.get("documentName", "document.pdf")
-        local_file = self.download_document(doc_url, doc_name)
+        local_file = self.resolve_document_file(doc_url, doc_name)
 
         if not local_file or not local_file.exists():
-            error_msg = f"Failed to download document from {doc_url}"
+            error_msg = f"Document could not be located at {doc_url}"
             logger.error(error_msg)
             self.update_job_status(job_id, "FAILED", error_message=error_msg)
             return
 
-        # 3. Print document
+        # 3. Print directly to Canon G3010 spooler
         try:
-            self.print_to_windows(local_file, job)
+            self.print_file_to_canon(local_file, job)
             logger.info(f"✓ Print Order #{order_num} successfully spooled to {self.selected_printer}!")
 
             # 4. Mark COMPLETED
@@ -366,16 +354,8 @@ class SiraqPrintAgent:
             logger.error(f"Printing failed for #{order_num}: {err}")
             self.update_job_status(job_id, "FAILED", error_message=err)
 
-        finally:
-            if self.config.get("cleanup_temp_files", True) and local_file and local_file.exists():
-                try:
-                    time.sleep(3)
-                    local_file.unlink(missing_ok=True)
-                except Exception as ce:
-                    logger.debug(f"Temp file cleanup notice: {ce}")
-
     def run(self):
-        logger.info("SIRAQ Local Print Agent is active and listening for approved jobs...")
+        logger.info("SIRAQ Native GDI Print Agent listening for queued orders...")
         last_poll_time = 0
 
         while True:
@@ -391,7 +371,7 @@ class SiraqPrintAgent:
                 jobs = self.fetch_queued_jobs()
 
                 if jobs:
-                    logger.info(f"Found {len(jobs)} pending print order(s).")
+                    logger.info(f"Found {len(jobs)} pending print order(s) across servers.")
                     for job in jobs:
                         self.process_job(job)
 
