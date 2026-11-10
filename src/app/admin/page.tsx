@@ -43,7 +43,7 @@ import {
   Filter,
 } from 'lucide-react';
 import QRCode from 'qrcode';
-import { ServiceItem, ProductItem, PrintJob, PrinterAgentStatus, WebsiteSettings } from '@/lib/types';
+import { ServiceItem, ProductItem, PrintJob, PrinterAgentStatus, WebsiteSettings, CustomerEnquiry } from '@/lib/types';
 import { Student } from '@/lib/studentTypes';
 import { SCHEMES_AND_SCHOLARSHIPS, SchemeScholarship } from '@/lib/servicesData';
 import { studentService } from '@/lib/firebase';
@@ -132,6 +132,11 @@ export default function AdminPage() {
   // Preserved Students State for Verification
   const [students, setStudents] = useState<Student[]>([]);
 
+  // Customer Enquiries & Scholarship Assistance Requests
+  const [enquiries, setEnquiries] = useState<CustomerEnquiry[]>([]);
+  const [enquiriesLoading, setEnquiriesLoading] = useState<boolean>(false);
+  const [enquiryFilter, setEnquiryFilter] = useState<'ALL' | 'NEW' | 'CONTACTED' | 'RESOLVED'>('ALL');
+
   // Feedback Notification
   const [actionNotice, setActionNotice] = useState<string>('');
 
@@ -204,6 +209,7 @@ export default function AdminPage() {
     loadPrintJobs();
     loadPrinterStatus();
     loadStudents();
+    loadEnquiries();
     generateQR(qrTargetUrl);
   };
 
@@ -285,6 +291,54 @@ export default function AdminPage() {
       setStudents(list);
     } catch (e) {
       console.warn('Students load error:', e);
+    }
+  };
+
+  const loadEnquiries = async () => {
+    setEnquiriesLoading(true);
+    try {
+      const res = await fetch('/api/enquiries');
+      const data = await res.json();
+      if (data.success && data.data) {
+        setEnquiries(data.data);
+      }
+    } catch (e) {
+      console.warn('Enquiries fetch error:', e);
+    } finally {
+      setEnquiriesLoading(false);
+    }
+  };
+
+  const handleUpdateEnquiryStatus = async (id: string, status: 'NEW' | 'CONTACTED' | 'RESOLVED') => {
+    try {
+      const res = await fetch('/api/enquiries', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEnquiries((prev) =>
+          prev.map((e) => (e.id === id ? { ...e, status } : e))
+        );
+        triggerNotice(`Enquiry marked as ${status}`);
+      }
+    } catch (e: any) {
+      alert(`Error updating enquiry: ${e.message}`);
+    }
+  };
+
+  const handleDeleteEnquiry = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this enquiry record?')) return;
+    try {
+      const res = await fetch(`/api/enquiries?id=${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        setEnquiries((prev) => prev.filter((e) => e.id !== id));
+        triggerNotice('Enquiry deleted successfully.');
+      }
+    } catch (e: any) {
+      alert(`Error deleting enquiry: ${e.message}`);
     }
   };
 
@@ -425,14 +479,14 @@ export default function AdminPage() {
   const navItems: { id: AdminTab; label: string; icon: React.ReactNode; badge?: string }[] = [
     { id: 'overview', label: '1. Overview', icon: <LayoutDashboard className="w-4 h-4" /> },
     { id: 'csc-services', label: '2. CSC Services', icon: <ShieldCheck className="w-4 h-4" />, badge: `${services.length}` },
-    { id: 'scholarships', label: '3. Scholarship Hub', icon: <GraduationCap className="w-4 h-4" /> },
+    { id: 'scholarships', label: '3. Scholarship Hub', icon: <GraduationCap className="w-4 h-4" />, badge: `${enquiries.filter(e => e.type === 'SCHOLARSHIP').length || ''}` },
     { id: 'frames-hampers', label: '4. Frames & Hampers', icon: <Frame className="w-4 h-4" /> },
     { id: 'product-management', label: '5. Product Management', icon: <Gift className="w-4 h-4" />, badge: `${products.length}` },
     { id: 'smart-print', label: '6. Smart Print', icon: <Printer className="w-4 h-4" /> },
     { id: 'print-queue', label: '7. Print Queue', icon: <ListOrdered className="w-4 h-4" />, badge: `${stats.pendingPrintingJobs || '0'}` },
     { id: 'printer-management', label: '8. Printer Management', icon: <Settings2 className="w-4 h-4" /> },
     { id: 'qr-management', label: '9. QR Management', icon: <QrIcon className="w-4 h-4" /> },
-    { id: 'enquiries', label: '10. Customer Enquiries', icon: <MessageSquare className="w-4 h-4" /> },
+    { id: 'enquiries', label: '10. Customer Enquiries', icon: <MessageSquare className="w-4 h-4" />, badge: `${enquiries.filter(e => e.status === 'NEW').length || ''}` },
     { id: 'orders', label: '11. Orders', icon: <ShoppingBag className="w-4 h-4" /> },
     { id: 'sales-revenue', label: '12. Sales & Revenue', icon: <TrendingUp className="w-4 h-4" /> },
     { id: 'website-settings', label: '13. Website Settings', icon: <Sliders className="w-4 h-4" /> },
@@ -536,11 +590,11 @@ export default function AdminPage() {
 
   // MAIN ADMIN DASHBOARD INTERFACE
   return (
-    <div className="min-h-screen bg-[#FAFAFC] text-[#1D1D1F] flex flex-col selection:bg-[#FFD43B] selection:text-black">
+    <div className="min-h-screen bg-[#FFFFFF] text-[#25352B] flex flex-col selection:bg-[#F5D76E] selection:text-[#25352B]">
       {/* Top Admin Header */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#E5E5E7] px-6 py-3.5 flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#DDF1DF] px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[#FFD43B] flex items-center justify-center p-1.5 shadow-sm">
+          <div className="w-8 h-8 rounded-full bg-[#DDF1DF] border border-[#A8CFAE] flex items-center justify-center p-1.5 shadow-sm">
             <Image
               src="/images/siraq-logo.png"
               alt="SIRAQ Logo"
@@ -550,8 +604,8 @@ export default function AdminPage() {
             />
           </div>
           <div>
-            <span className="font-display font-bold text-base text-[#1D1D1F]">SIRAQ Admin Hub</span>
-            <span className="text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full ml-2">
+            <span className="font-display font-bold text-base text-[#25352B]">SIRAQ Admin Hub</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider bg-[#DDF1DF] text-[#477D55] px-2.5 py-0.5 rounded-full ml-2 border border-[#A8CFAE]">
               Windows 11 Local Console
             </span>
           </div>
@@ -561,21 +615,21 @@ export default function AdminPage() {
         <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-2 text-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="font-semibold text-emerald-700">Printer Online (Canon G3010)</span>
+            <span className="font-semibold text-[#477D55]">Canon PIXMA G3010 Online</span>
           </div>
 
           <button
             onClick={loadAllData}
             title="Refresh All Dashboard Data"
-            className="p-2 rounded-xl border border-[#E5E5E7] hover:bg-[#F2F2F7] text-[#6E6E73] hover:text-[#1D1D1F] transition text-xs flex items-center gap-1.5"
+            className="p-2 rounded-xl border border-[#DDF1DF] hover:bg-[#F5F9F5] text-[#25352B] transition text-xs flex items-center gap-1.5"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
+            <RefreshCw className="w-3.5 h-3.5 text-[#477D55]" />
             <span className="hidden sm:inline">Refresh</span>
           </button>
 
           <button
             onClick={handleLogout}
-            className="px-3.5 py-1.5 rounded-full bg-[#F2F2F7] hover:bg-red-50 hover:text-red-600 text-xs font-semibold text-[#6E6E73] transition flex items-center gap-1.5"
+            className="px-3.5 py-1.5 rounded-full bg-[#F5F9F5] hover:bg-red-50 hover:text-red-600 text-xs font-semibold text-[#25352B] border border-[#DDF1DF] transition flex items-center gap-1.5"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Logout</span>
@@ -585,8 +639,8 @@ export default function AdminPage() {
 
       {/* Action Notification Banner */}
       {actionNotice && (
-        <div className="bg-[#FFF9DB] border-b border-[#FDE68A] px-6 py-2.5 text-xs text-[#855B00] font-bold flex items-center justify-center gap-2 transition animate-fade-in">
-          <Sparkles className="w-3.5 h-3.5 text-[#B45309]" />
+        <div className="bg-[#F5F9F5] border-b border-[#A8CFAE] px-6 py-2.5 text-xs text-[#477D55] font-bold flex items-center justify-center gap-2 transition animate-fade-in">
+          <Sparkles className="w-3.5 h-3.5 text-[#477D55]" />
           <span>{actionNotice}</span>
         </div>
       )}
@@ -594,7 +648,7 @@ export default function AdminPage() {
       {/* Dashboard Body with Left Sidebar & Right Content */}
       <div className="flex-1 flex flex-col md:flex-row">
         {/* Left Sidebar Navigation (All 15 Items) */}
-        <aside className="w-full md:w-64 bg-white border-r border-[#E5E5E7] p-4 flex flex-col justify-between shrink-0">
+        <aside className="w-full md:w-64 bg-[#F5F9F5] border-r border-[#DDF1DF] p-4 flex flex-col justify-between shrink-0">
           <nav className="space-y-1 overflow-y-auto max-h-[calc(100vh-120px)] no-scrollbar">
             {navItems.map((item) => (
               <button
@@ -602,12 +656,12 @@ export default function AdminPage() {
                 onClick={() => setActiveTab(item.id)}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition ${
                   activeTab === item.id
-                    ? 'bg-[#FFD43B] text-[#1D1D1F] shadow-sm font-bold'
-                    : 'text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[#FAFAFC]'
+                    ? 'bg-[#F5D76E] text-[#25352B] shadow-sm font-bold border border-[#eed063]'
+                    : 'text-[#25352B]/75 hover:text-[#25352B] hover:bg-white'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <span className={activeTab === item.id ? 'text-[#1D1D1F]' : 'text-[#86868B]'}>
+                  <span className={activeTab === item.id ? 'text-[#25352B]' : 'text-[#477D55]'}>
                     {item.icon}
                   </span>
                   <span>{item.label}</span>
@@ -895,6 +949,175 @@ export default function AdminPage() {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* =======================================================
+              3. SCHOLARSHIP HUB & OTHER ASSISTANCE ENQUIRIES
+             ======================================================= */}
+          {activeTab === 'scholarships' && (
+            <div className="space-y-8 max-w-6xl">
+              <div>
+                <h2 className="text-2xl font-bold font-display text-[#25352B]">Scholarships & Financial Assistance Desk</h2>
+                <p className="text-xs text-[#477D55]">
+                  Official SSP (Karnataka) and NSP (National) portals, plus live customer requests submitted under Other Scholarship Assistance.
+                </p>
+              </div>
+
+              {/* Official Portals Overview Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {SCHEMES_AND_SCHOLARSHIPS.map((scheme) => (
+                  <div key={scheme.id} className="bg-white border border-[#DDF1DF] rounded-3xl p-6 shadow-sm flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="px-3 py-1 rounded-full bg-[#DDF1DF] text-[#477D55] text-[10px] font-bold uppercase">
+                          {scheme.category}
+                        </span>
+                        <span className="text-xs font-bold text-[#477D55]">{scheme.status}</span>
+                      </div>
+                      <h3 className="text-lg font-bold text-[#25352B] mb-1">{scheme.title}</h3>
+                      <p className="text-xs text-[#25352B]/70 mb-3">{scheme.department}</p>
+                      <div className="p-3 rounded-xl bg-[#F5F9F5] border border-[#DDF1DF] text-xs text-[#25352B] mb-3">
+                        <span className="font-bold block text-[#477D55]">Coverage:</span>
+                        <span>{scheme.benefitAmount}</span>
+                      </div>
+                      <p className="text-xs text-[#25352B]/80 leading-relaxed mb-4">{scheme.summary}</p>
+                    </div>
+
+                    <div className="pt-3 border-t border-[#DDF1DF] flex items-center justify-between text-xs">
+                      <span className="text-[#25352B]/60">Portal: {scheme.portalName}</span>
+                      <a
+                        href={scheme.officialPortal}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3 py-1.5 rounded-full bg-[#F5F9F5] hover:bg-[#DDF1DF] text-[#477D55] font-bold transition flex items-center gap-1"
+                      >
+                        <span>Official Portal</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Live Student Assistance Enquiries Section */}
+              <div className="bg-white border border-[#DDF1DF] rounded-3xl p-6 sm:p-8 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-[#DDF1DF]">
+                  <div>
+                    <h3 className="text-lg font-bold font-display text-[#25352B] flex items-center gap-2">
+                      <GraduationCap className="w-5 h-5 text-[#477D55]" />
+                      <span>Other Scholarship Assistance Requests ({enquiries.filter((e) => e.type === 'SCHOLARSHIP' || e.scholarshipName).length})</span>
+                    </h3>
+                    <p className="text-xs text-[#25352B]/75 mt-0.5">
+                      Live submissions from students requesting help for private, corporate, or state scholarships.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={loadEnquiries}
+                    className="px-3.5 py-1.5 rounded-full border border-[#DDF1DF] bg-[#F5F9F5] hover:bg-[#DDF1DF] text-xs font-bold text-[#25352B] transition flex items-center gap-1.5"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5 text-[#477D55]" />
+                    <span>Refresh</span>
+                  </button>
+                </div>
+
+                {enquiries.filter((e) => e.type === 'SCHOLARSHIP' || e.scholarshipName).length === 0 ? (
+                  <div className="text-center py-10 text-xs text-[#25352B]/60">
+                    No scholarship assistance requests received yet.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {enquiries
+                      .filter((e) => e.type === 'SCHOLARSHIP' || e.scholarshipName)
+                      .map((item) => (
+                        <div
+                          key={item.id}
+                          className="p-5 rounded-2xl border border-[#DDF1DF] bg-[#F5F9F5] flex flex-col md:flex-row md:items-center justify-between gap-4"
+                        >
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2.5">
+                              <span className="font-bold text-sm text-[#25352B]">{item.studentName || item.name}</span>
+                              <span
+                                className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                  item.status === 'NEW'
+                                    ? 'bg-[#F5D76E] text-[#25352B] border border-[#eed063]'
+                                    : item.status === 'CONTACTED'
+                                    ? 'bg-[#B9DDF2] text-[#1E3A8A]'
+                                    : 'bg-emerald-100 text-emerald-800'
+                                }`}
+                              >
+                                {item.status}
+                              </span>
+                              <span className="text-[10px] text-[#25352B]/50">
+                                {new Date(item.createdAt).toLocaleDateString()} {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+
+                            <p className="text-xs font-semibold text-[#477D55]">
+                              Target Scholarship: {item.scholarshipName || 'General Scholarship'}
+                            </p>
+
+                            {item.scholarshipWebsite && (
+                              <p className="text-[11px] text-[#25352B]/70 flex items-center gap-1">
+                                <span>Website:</span>
+                                <a
+                                  href={item.scholarshipWebsite.startsWith('http') ? item.scholarshipWebsite : `https://${item.scholarshipWebsite}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-[#477D55] hover:underline flex items-center gap-0.5"
+                                >
+                                  {item.scholarshipWebsite} <ExternalLink className="w-2.5 h-2.5" />
+                                </a>
+                              </p>
+                            )}
+
+                            {item.additionalInfo && (
+                              <p className="text-xs text-[#25352B]/85 bg-white p-2.5 rounded-xl border border-[#DDF1DF]">
+                                &ldquo;{item.additionalInfo}&rdquo;
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <a
+                              href={`https://wa.me/${item.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${item.studentName || item.name}, this is SIRAQ regarding your scholarship assistance request for ${item.scholarshipName}.`)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="px-3 py-1.5 rounded-full bg-[#25D366] text-white text-xs font-bold transition flex items-center gap-1 shadow-sm hover:opacity-95"
+                            >
+                              <span>WhatsApp</span>
+                            </a>
+
+                            {item.status === 'NEW' && (
+                              <button
+                                onClick={() => handleUpdateEnquiryStatus(item.id, 'CONTACTED')}
+                                className="px-3 py-1.5 rounded-full bg-white border border-[#DDF1DF] text-xs font-semibold text-[#25352B] hover:bg-[#DDF1DF]"
+                              >
+                                Mark Contacted
+                              </button>
+                            )}
+                            {item.status !== 'RESOLVED' && (
+                              <button
+                                onClick={() => handleUpdateEnquiryStatus(item.id, 'RESOLVED')}
+                                className="px-3 py-1.5 rounded-full bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700"
+                              >
+                                Resolve
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDeleteEnquiry(item.id)}
+                              className="p-1.5 rounded-full border border-red-200 text-red-600 hover:bg-red-50"
+                              title="Delete enquiry"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1399,7 +1622,7 @@ export default function AdminPage() {
                   </label>
                   <input
                     type="number"
-                    defaultValue={2}
+                    defaultValue={5}
                     className="w-full text-sm px-4 py-2.5 rounded-xl border border-[#D1D5DB]"
                   />
                 </div>
@@ -1454,12 +1677,147 @@ export default function AdminPage() {
           )}
 
           {activeTab === 'enquiries' && (
-            <div className="space-y-6 max-w-4xl">
-              <h2 className="text-2xl font-bold font-display text-[#1D1D1F]">Customer Enquiries</h2>
-              <p className="text-xs text-[#6E6E73]">Direct messages from public WhatsApp enquiries and quotes.</p>
-              <div className="bg-white border border-[#E5E5E7] rounded-2xl p-6 text-center text-xs text-[#6E6E73]">
-                Customer enquiries are dispatched directly to shop WhatsApp (+91 8217469646).
+            <div className="space-y-6 max-w-5xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold font-display text-[#25352B]">Customer Enquiries & Leads</h2>
+                  <p className="text-xs text-[#477D55]">
+                    Manage incoming enquiries from scholarship requests, CSC appointments, and custom product orders.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {(['ALL', 'NEW', 'CONTACTED', 'RESOLVED'] as const).map((st) => (
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => setEnquiryFilter(st)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold transition ${
+                        enquiryFilter === st
+                          ? 'bg-[#F5D76E] text-[#25352B] shadow-sm'
+                          : 'bg-[#F5F9F5] border border-[#DDF1DF] text-[#25352B]/70 hover:bg-[#DDF1DF]'
+                      }`}
+                    >
+                      {st} ({st === 'ALL' ? enquiries.length : enquiries.filter((e) => e.status === st).length})
+                    </button>
+                  ))}
+                  <button
+                    onClick={loadEnquiries}
+                    className="p-1.5 rounded-full border border-[#DDF1DF] bg-[#F5F9F5] hover:bg-[#DDF1DF] text-[#477D55]"
+                    title="Reload enquiries"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
+
+              {enquiriesLoading ? (
+                <div className="text-center py-12">
+                  <RefreshCw className="w-6 h-6 animate-spin text-[#477D55] mx-auto mb-2" />
+                  <p className="text-xs text-[#25352B]/70">Loading customer enquiries...</p>
+                </div>
+              ) : enquiries.length === 0 ? (
+                <div className="bg-white border border-[#DDF1DF] rounded-3xl p-10 text-center text-xs text-[#25352B]/60">
+                  No enquiries in database yet.
+                </div>
+              ) : (
+                <div className="space-y-3.5">
+                  {enquiries
+                    .filter((e) => (enquiryFilter === 'ALL' ? true : e.status === enquiryFilter))
+                    .map((item) => (
+                      <div
+                        key={item.id}
+                        className="p-5 rounded-2xl border border-[#DDF1DF] bg-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-[#A8CFAE] transition"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2.5">
+                            <span className="font-bold text-sm text-[#25352B]">{item.studentName || item.name}</span>
+                            <span
+                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                item.status === 'NEW'
+                                  ? 'bg-[#F5D76E] text-[#25352B] border border-[#eed063]'
+                                  : item.status === 'CONTACTED'
+                                  ? 'bg-[#B9DDF2] text-[#1E3A8A]'
+                                  : 'bg-emerald-100 text-emerald-800'
+                              }`}
+                            >
+                              {item.status}
+                            </span>
+                            <span className="text-[10px] text-[#25352B]/50">
+                              {new Date(item.createdAt).toLocaleDateString()} {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            {item.type && (
+                              <span className="px-2 py-0.5 rounded text-[10px] bg-[#DDF1DF] text-[#477D55] font-semibold">
+                                {item.type}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-4 text-xs text-[#25352B]/75">
+                            <span className="font-semibold text-[#477D55]">{item.phone}</span>
+                            {item.email && <span>{item.email}</span>}
+                            <span>Service/Subject: {item.serviceOrProduct || item.scholarshipName || 'General'}</span>
+                          </div>
+
+                          {item.scholarshipWebsite && (
+                            <div className="text-[11px] text-[#25352B]/70 flex items-center gap-1">
+                              <span>Scholarship Website:</span>
+                              <a
+                                href={item.scholarshipWebsite.startsWith('http') ? item.scholarshipWebsite : `https://${item.scholarshipWebsite}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[#477D55] hover:underline flex items-center gap-0.5"
+                              >
+                                {item.scholarshipWebsite} <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            </div>
+                          )}
+
+                          {(item.additionalInfo || item.message) && (
+                            <p className="text-xs text-[#25352B]/85 bg-[#F5F9F5] p-2.5 rounded-xl border border-[#DDF1DF] mt-1">
+                              &ldquo;{item.additionalInfo || item.message}&rdquo;
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <a
+                            href={`https://wa.me/${item.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${item.studentName || item.name}, this is SIRAQ responding to your enquiry about ${item.serviceOrProduct || item.scholarshipName || 'our services'}.`)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-3.5 py-1.5 rounded-full bg-[#25D366] text-white text-xs font-bold transition flex items-center gap-1 shadow-sm hover:opacity-95"
+                          >
+                            <span>WhatsApp</span>
+                          </a>
+
+                          {item.status === 'NEW' && (
+                            <button
+                              onClick={() => handleUpdateEnquiryStatus(item.id, 'CONTACTED')}
+                              className="px-3 py-1.5 rounded-full bg-[#F5F9F5] border border-[#DDF1DF] text-xs font-semibold text-[#25352B] hover:bg-[#DDF1DF]"
+                            >
+                              Contacted
+                            </button>
+                          )}
+                          {item.status !== 'RESOLVED' && (
+                            <button
+                              onClick={() => handleUpdateEnquiryStatus(item.id, 'RESOLVED')}
+                              className="px-3 py-1.5 rounded-full bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700"
+                            >
+                              Resolve
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDeleteEnquiry(item.id)}
+                            className="p-1.5 rounded-full border border-red-200 text-red-600 hover:bg-red-50"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
           )}
         </main>

@@ -8,33 +8,28 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Core Apple Minimalist Palette
-        apple: {
-          white: '#FFFFFF',
-          bg: '#FAFAFC',
-          surface: '#F5F5F7',
-          border: '#E5E5E7',
-          borderLight: '#F2F2F7',
-          text: '#1D1D1F',
-          subtext: '#6E6E73',
-          caption: '#86868B',
-        },
-        // Specified Primary Brand Colors
+        // SIRAQ Premium Apple-Inspired Light Green Colour System
         siraq: {
-          yellow: '#FFD43B',
-          yellowHover: '#F5C724',
-          yellowLight: '#FFF9DB',
-          sky: '#87CEEB',
-          skyDark: '#5FAED1',
-          skyLight: '#F0F9FF',
-          skySoft: '#E0F2FE',
+          bg: '#FFFFFF',              // Primary Background: Pure White
+          bgSubtle: '#F5F9F5',        // Secondary Background: Very Light Greenish White
+          primaryGreen: '#A8CFAE',    // Primary Green: Soft Sage Green
+          secondaryGreen: '#DDF1DF',  // Secondary Green: Light Mint Green
+          accentGreen: '#477D55',     // Accent Green: Premium Forest Green
+          yellow: '#F5D76E',          // Yellow Accent: Soft Premium Yellow
+          yellowHover: '#ECD063',     // Yellow Hover
+          sky: '#B9DDF2',             // Sky Blue Accent: Light Sky Blue
+          skyDark: '#5E9EC4',         // Sky Dark Text
+          text: '#25352B',            // Text: Deep Greenish Charcoal
+          textMuted: '#556B5D',       // Muted Text
+          border: '#DDF1DF',          // Mint Border
+          borderDark: '#C2E0C7',      // Slightly deeper border
         },
-        // Mapped legacy tokens for seamless backward compatibility with new Apple theme
-        accent: '#FFD43B',
-        neon: '#87CEEB',
-        charcoal: '#1D1D1F',
-        space: '#F5F5F7',
-        slateSoft: '#6E6E73',
+        // Mapped tokens for consistent system styling
+        accent: '#F5D76E',
+        forest: '#477D55',
+        sage: '#A8CFAE',
+        mint: '#DDF1DF',
+        charcoal: '#25352B',
       },
       fontFamily: {
         sans: [
@@ -56,20 +51,15 @@ module.exports = {
         ],
       },
       boxShadow: {
-        'apple-sm': '0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04)',
-        'apple-card': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-        'apple-hover': '0 12px 32px -4px rgba(0, 0, 0, 0.08)',
-        'apple-modal': '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
-        'yellow-glow': '0 4px 20px rgba(255, 212, 59, 0.35)',
-        'sky-glow': '0 4px 20px rgba(135, 206, 235, 0.35)',
-        glow: '0 4px 20px rgba(255, 212, 59, 0.3)',
-        glass: '0 8px 30px rgba(0, 0, 0, 0.04)',
+        'siraq-card': '0 4px 20px -2px rgba(37, 53, 43, 0.05)',
+        'siraq-hover': '0 12px 32px -4px rgba(37, 53, 43, 0.08)',
+        'siraq-modal': '0 25px 50px -12px rgba(37, 53, 43, 0.15)',
+        'yellow-pill': '0 2px 10px rgba(245, 215, 110, 0.4)',
       },
       borderRadius: {
-        'apple-sm': '10px',
-        'apple': '16px',
-        'apple-lg': '22px',
-        'apple-xl': '28px',
+        'siraq': '18px',
+        'siraq-lg': '24px',
+        'siraq-xl': '32px',
       },
     },
   },

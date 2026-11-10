@@ -4,7 +4,7 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'SIRAQ — Digital Citizen Services, Custom Gifting & Smart Print',
   description:
-    'SIRAQ: Apple-inspired digital experience for CSC Citizen Services, bespoke photo frames, luxury hampers, and self-service QR Smart Printing.',
+    'SIRAQ: Apple-inspired digital experience with premium sage green tones for CSC Citizen Services, bespoke photo frames, luxury hampers, and self-service QR Smart Printing.',
   icons: {
     icon: '/images/siraq-logo.png',
   },
@@ -26,7 +26,7 @@ export default function RootLayout({
         />
         <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
       </head>
-      <body className="bg-white min-h-screen text-[#1D1D1F] antialiased selection:bg-[#FFD43B] selection:text-black">
+      <body className="bg-white min-h-screen text-[#25352B] antialiased selection:bg-[#F5D76E] selection:text-[#25352B]">
         {children}
       </body>
     </html>

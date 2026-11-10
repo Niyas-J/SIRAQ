@@ -6,15 +6,12 @@ import {
   setDoc,
   updateDoc,
   deleteDoc,
-  query,
-  where,
-  orderBy,
 } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from './firebase';
 import { ServiceItem } from './types';
 import { CSC_SERVICES } from './servicesData';
 
-// Initial seed list converted to ServiceItem format
+// Freshly synchronized services seed matching the exact required details & prices
 const INITIAL_SERVICES: ServiceItem[] = CSC_SERVICES.map((s, index) => ({
   id: s.id,
   title: s.title,
@@ -25,14 +22,13 @@ const INITIAL_SERVICES: ServiceItem[] = CSC_SERVICES.map((s, index) => ({
   documents: s.documents,
   turnaroundTime: s.turnaroundTime,
   feeEstimate: s.feeEstimate,
-  numericPrice: parseInt(s.feeEstimate.replace(/[^0-9]/g, '') || '50', 10),
+  numericPrice: s.numericPrice ?? (parseInt(s.feeEstimate.replace(/[^0-9]/g, '') || '100', 10)),
   features: s.features,
   isActive: true,
   orderRank: index + 1,
   updatedAt: new Date().toISOString(),
 }));
 
-// In-memory fallback
 let memoryServices: ServiceItem[] = [...INITIAL_SERVICES];
 
 export const servicesStore = {
@@ -41,9 +37,9 @@ export const servicesStore = {
       try {
         const colRef = collection(db, 'services');
         const snapshot = await getDocs(colRef);
-        
+
         if (snapshot.empty) {
-          // Seed initial services to Firestore
+          // Seed updated services into Firestore
           for (const item of INITIAL_SERVICES) {
             await setDoc(doc(db, 'services', item.id), item);
           }
@@ -54,6 +50,15 @@ export const servicesStore = {
         snapshot.forEach((snap) => {
           items.push({ id: snap.id, ...snap.data() } as ServiceItem);
         });
+
+        // Ensure newly updated core services exist in Firestore
+        for (const seedItem of INITIAL_SERVICES) {
+          const exists = items.some((i) => i.id === seedItem.id);
+          if (!exists) {
+            await setDoc(doc(db, 'services', seedItem.id), seedItem);
+            items.push(seedItem);
+          }
+        }
 
         items.sort((a, b) => (a.orderRank || 0) - (b.orderRank || 0));
 
@@ -66,7 +71,6 @@ export const servicesStore = {
       }
     }
 
-    // Fallback to local memory
     if (!includeInactive) {
       return memoryServices.filter((s) => s.isActive);
     }
@@ -179,4 +183,3 @@ export const servicesStore = {
     return true;
   },
 };
-

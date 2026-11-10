@@ -121,7 +121,12 @@ export interface CustomerEnquiry {
   phone: string;
   email?: string;
   serviceOrProduct?: string;
-  message: string;
+  message?: string;
+  studentName?: string;
+  scholarshipName?: string;
+  scholarshipWebsite?: string;
+  additionalInfo?: string;
+  type?: 'SCHOLARSHIP' | 'GENERAL' | 'PRODUCT';
   createdAt: string;
   status: 'NEW' | 'CONTACTED' | 'RESOLVED';
 }

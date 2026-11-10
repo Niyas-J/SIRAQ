@@ -4,183 +4,161 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
 
-/* ============================================
-   SIRAQ APPLE-INSPIRED DESIGN SYSTEM
-   Dominant Background: Pure White #FFFFFF
-   Primary Accent: Premium Yellow #FFD43B
-   Secondary Accent: Soft Sky Blue #87CEEB
-   Typography: Deep Apple Charcoal #1D1D1F
-   ============================================ */
+/* ==========================================================================
+   SIRAQ PREMIUM APPLE-INSPIRED COLOUR SYSTEM
+   Primary Background:   #FFFFFF (Pure White)
+   Secondary Background: #F5F9F5 (Very Light Greenish White)
+   Primary Green:        #A8CFAE (Soft Sage Green)
+   Secondary Green:      #DDF1DF (Light Mint Green)
+   Accent Green:         #477D55 (Premium Forest Green)
+   Yellow Accent:        #F5D76E (Soft Premium Yellow)
+   Sky Blue Accent:      #B9DDF2 (Light Sky Blue)
+   Text:                 #25352B (Deep Greenish Charcoal)
+   ========================================================================== */
 :root {
-  --color-white: #FFFFFF;
-  --color-yellow: #FFD43B;
-  --color-yellow-hover: #F5C724;
-  --color-sky: #87CEEB;
-  --color-sky-dark: #5FAED1;
-  --color-apple-text: #1D1D1F;
-  --color-apple-subtext: #6E6E73;
-  --color-apple-caption: #86868B;
-  --color-apple-bg: #FFFFFF;
-  --color-apple-surface: #FAFAFC;
-  --color-apple-card: #FFFFFF;
-  --color-apple-border: #E5E5E7;
-  
-  /* Legacy mappings */
-  --color-charcoal: #1D1D1F;
-  --color-space: #FAFAFC;
-  --color-accent: #FFD43B;
-  --color-neon: #87CEEB;
-  --color-slate-soft: #6E6E73;
   --color-bg-primary: #FFFFFF;
+  --color-bg-secondary: #F5F9F5;
+  --color-primary-green: #A8CFAE;
+  --color-secondary-green: #DDF1DF;
+  --color-accent-green: #477D55;
+  --color-yellow: #F5D76E;
+  --color-yellow-hover: #ECD063;
+  --color-sky-blue: #B9DDF2;
+  --color-text: #25352B;
+  --color-text-muted: #556B5D;
+  --color-border: #DDF1DF;
 }
 
-/* Smooth Scrolling */
 html {
   scroll-behavior: smooth;
   background-color: #FFFFFF;
-  color: #1D1D1F;
+  color: #25352B;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   background-color: #FFFFFF;
-  color: #1D1D1F;
+  color: #25352B;
   overflow-x: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
 }
 
-/* Apple Crisp Glass Navigation */
-.apple-glass {
-  background: rgba(255, 255, 255, 0.85);
+/* Apple-style Frosted Navbar */
+.siraq-nav {
+  background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(229, 229, 231, 0.7);
+  border-bottom: 1px solid #DDF1DF;
 }
 
-.apple-card {
+/* Premium Rounded Cards */
+.siraq-card {
   background: #FFFFFF;
-  border: 1px solid #E5E5E7;
-  border-radius: 20px;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04);
+  border: 1px solid #DDF1DF;
+  border-radius: 24px;
+  box-shadow: 0 4px 20px -2px rgba(37, 53, 43, 0.05);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.apple-card:hover {
+.siraq-card:hover {
   transform: translateY(-2px);
-  border-color: #D1D5DB;
-  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.08);
+  border-color: #A8CFAE;
+  box-shadow: 0 12px 32px -4px rgba(37, 53, 43, 0.08);
 }
 
-/* Glass effect for subtle white floating elements */
-.glass {
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid #E5E5E7;
-  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.06);
+/* Sage Green Hero Section Framing */
+.siraq-sage-panel {
+  background-color: #F5F9F5;
+  border: 1px solid #DDF1DF;
+  border-radius: 28px;
 }
 
-.glass-card {
-  background: #FFFFFF;
-  border: 1px solid #E5E5E7;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
-}
-
-/* Apple Pill Buttons */
-.apple-btn-yellow {
-  background-color: #FFD43B;
-  color: #1D1D1F;
-  font-weight: 600;
+/* Primary Yellow Pill Buttons */
+.btn-yellow-primary {
+  background-color: #F5D76E;
+  color: #25352B;
+  font-weight: 700;
   border-radius: 9999px;
-  padding: 0.65rem 1.5rem;
+  padding: 0.75rem 1.75rem;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 10px rgba(255, 212, 59, 0.35);
+  box-shadow: 0 2px 10px rgba(245, 215, 110, 0.35);
 }
 
-.apple-btn-yellow:hover {
-  background-color: #F5C724;
+.btn-yellow-primary:hover {
+  background-color: #ECD063;
   transform: scale(1.02);
-  box-shadow: 0 4px 16px rgba(255, 212, 59, 0.45);
+  box-shadow: 0 4px 16px rgba(245, 215, 110, 0.45);
 }
 
-.apple-btn-sky {
-  background-color: rgba(135, 206, 235, 0.15);
-  color: #0284C7;
-  border: 1px solid rgba(135, 206, 235, 0.4);
+/* Secondary Green Pill Buttons */
+.btn-green-secondary {
+  background-color: #DDF1DF;
+  color: #477D55;
+  border: 1px solid #A8CFAE;
   font-weight: 600;
   border-radius: 9999px;
-  padding: 0.65rem 1.5rem;
+  padding: 0.75rem 1.75rem;
   transition: all 0.2s ease;
 }
 
-.apple-btn-sky:hover {
-  background-color: rgba(135, 206, 235, 0.25);
-  border-color: #87CEEB;
-  color: #0369A1;
+.btn-green-secondary:hover {
+  background-color: #A8CFAE;
+  color: #25352B;
 }
 
-/* Typography styles */
-.apple-headline {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Poppins", sans-serif;
-  letter-spacing: -0.025em;
-  font-weight: 700;
-  color: #1D1D1F;
-}
-
-.apple-subheadline {
-  color: #6E6E73;
-  line-height: 1.5;
-  font-weight: 400;
-}
-
-/* Subtle Highlights */
-.highlight-yellow {
-  background: linear-gradient(120deg, rgba(255, 212, 59, 0.25) 0%, rgba(255, 212, 59, 0.15) 100%);
-  padding: 0.1em 0.35em;
-  border-radius: 6px;
-}
-
+/* Subtle Sky Blue Information Badges */
 .badge-sky {
-  background-color: rgba(135, 206, 235, 0.15);
-  color: #0284C7;
-  border: 1px solid rgba(135, 206, 235, 0.3);
+  background-color: rgba(185, 221, 242, 0.3);
+  color: #2B6688;
+  border: 1px solid #B9DDF2;
   font-size: 0.75rem;
   font-weight: 600;
-  padding: 0.2rem 0.65rem;
+  padding: 0.25rem 0.75rem;
   border-radius: 9999px;
 }
 
-.badge-yellow {
-  background-color: #FFF9DB;
-  color: #B45309;
-  border: 1px solid #FDE68A;
+/* Forest Green Accents */
+.badge-green {
+  background-color: #DDF1DF;
+  color: #477D55;
+  border: 1px solid #A8CFAE;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+}
+
+/* Yellow Price Pill */
+.badge-price {
+  background-color: #FEF9E7;
+  color: #7A5C00;
+  border: 1px solid #F5D76E;
   font-size: 0.75rem;
   font-weight: 700;
   padding: 0.2rem 0.65rem;
   border-radius: 9999px;
 }
 
-/* Custom Scrollbar */
+/* Clean Apple Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #FAFAFC;
+  background: #F5F9F5;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #D1D5DB;
+  background: #C2E0C7;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #9CA3AF;
+  background: #A8CFAE;
 }
 
-/* Hide scrollbar utility */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }

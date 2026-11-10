@@ -73,15 +73,15 @@ export default function LogoIntroOverlay({ onComplete, isOpen, onClose }: LogoIn
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: [0.8, 1.4, 1.8], opacity: [0, 0.25, 0] }}
               transition={{ duration: 3.2, repeat: Infinity, ease: 'easeOut' }}
-              className="absolute w-[450px] h-[450px] md:w-[600px] md:h-[600px] rounded-full border border-[#FFD43B]/40"
+              className="absolute w-[450px] h-[450px] md:w-[600px] md:h-[600px] rounded-full border border-[#A8CFAE]/50"
             />
             <motion.div
               initial={{ scale: 0.7, opacity: 0 }}
               animate={{ scale: [0.7, 1.25, 1.6], opacity: [0, 0.25, 0] }}
               transition={{ duration: 3.2, delay: 0.7, repeat: Infinity, ease: 'easeOut' }}
-              className="absolute w-[360px] h-[360px] md:w-[500px] md:h-[500px] rounded-full border border-[#87CEEB]/40"
+              className="absolute w-[360px] h-[360px] md:w-[500px] md:h-[500px] rounded-full border border-[#B9DDF2]/60"
             />
-            <div className="absolute w-[300px] h-[300px] rounded-full bg-[#FFF9DB] blur-3xl opacity-60" />
+            <div className="absolute w-[300px] h-[300px] rounded-full bg-[#DDF1DF] blur-3xl opacity-60" />
           </div>
 
           {/* Central Logo Container */}
@@ -92,7 +92,7 @@ export default function LogoIntroOverlay({ onComplete, isOpen, onClose }: LogoIn
             className="relative z-10 flex flex-col items-center text-center px-6"
           >
             <div className="relative mb-6">
-              <div className="w-24 h-24 md:w-28 md:h-28 rounded-3xl p-3 bg-white border border-[#E5E5E7] shadow-[0_12px_36px_rgba(0,0,0,0.06)] flex items-center justify-center">
+              <div className="w-24 h-24 md:w-28 md:h-28 rounded-3xl p-3 bg-white border border-[#DDF1DF] shadow-[0_12px_36px_rgba(71,125,85,0.08)] flex items-center justify-center">
                 <Image
                   src="/images/siraq-logo.png"
                   alt="SIRAQ Logo"
@@ -108,7 +108,7 @@ export default function LogoIntroOverlay({ onComplete, isOpen, onClose }: LogoIn
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35, duration: 0.6 }}
-              className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-[#1D1D1F]"
+              className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-[#25352B]"
             >
               SIRAQ
             </motion.h1>
@@ -117,15 +117,15 @@ export default function LogoIntroOverlay({ onComplete, isOpen, onClose }: LogoIn
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.55, duration: 0.6 }}
-              className="mt-2 text-xs sm:text-sm font-semibold tracking-wider text-[#6E6E73] uppercase"
+              className="mt-2 text-xs sm:text-sm font-semibold tracking-wider text-[#477D55] uppercase"
             >
               Citizen Services • Custom Gifting • Smart Print
             </motion.p>
 
             {/* Apple Minimalist Progress Line */}
-            <div className="w-48 h-1 bg-[#F2F2F7] rounded-full overflow-hidden mt-8">
+            <div className="w-48 h-1.5 bg-[#DDF1DF] rounded-full overflow-hidden mt-8">
               <motion.div
-                className="h-full bg-[#FFD43B]"
+                className="h-full bg-[#F5D76E]"
                 style={{ width: `${progress}%` }}
               />
             </div>

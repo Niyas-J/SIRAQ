@@ -24,6 +24,17 @@ import urllib.error
 import urllib.parse
 from pathlib import Path
 
+# Optional pypdf for page counting and slicing
+try:
+    import pypdf
+    HAS_PYPDF = True
+except ImportError:
+    HAS_PYPDF = False
+
+# Optional win32print / ctypes winspool
+import ctypes
+from ctypes import wintypes
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -38,8 +49,18 @@ logger = logging.getLogger("SiraqPrintAgent")
 CONFIG_FILE = Path(__file__).parent / "agent_config.json"
 HISTORY_FILE = Path(__file__).parent / "print_history.json"
 TEMP_DIR = Path(__file__).parent / "temp_downloads"
-
 TEMP_DIR.mkdir(exist_ok=True)
+
+EDGE_CANDIDATE_PATHS = [
+    Path("C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"),
+    Path("C:/Program Files/Microsoft/Edge/Application/msedge.exe"),
+]
+
+def find_edge_path():
+    for p in EDGE_CANDIDATE_PATHS:
+        if p.exists():
+            return str(p)
+    return None
 
 class SiraqPrintAgent:
     def __init__(self):
@@ -52,6 +73,7 @@ class SiraqPrintAgent:
         self.auto_print = self.config.get("auto_print_enabled", True)
         self.history = self.load_history()
         self.detected_printers = self.detect_printers()
+        self.edge_path = find_edge_path()
         self.last_heartbeat_time = 0
 
         logger.info("=" * 65)
@@ -59,6 +81,8 @@ class SiraqPrintAgent:
         logger.info(f"  Target Server: {self.server_url}")
         logger.info(f"  Selected Printer: {self.selected_printer}")
         logger.info(f"  Detected Printers: {', '.join(self.detected_printers)}")
+        if self.edge_path:
+            logger.info(f"  Edge Silent PDF Engine: {self.edge_path}")
         logger.info("=" * 65)
 
     def load_config(self):
@@ -87,13 +111,13 @@ class SiraqPrintAgent:
             logger.warning(f"Could not save history: {e}")
 
     def detect_printers(self):
-        """Detect installed printers on Windows using System.Drawing"""
+        """Detect installed printers on Windows via PowerShell"""
         try:
             cmd = [
                 "powershell",
                 "-NoProfile",
                 "-Command",
-                "Add-Type -AssemblyName System.Drawing; [System.Drawing.Printing.PrinterSettings]::InstalledPrinters"
+                "Get-Printer | Select-Object -ExpandProperty Name"
             ]
             res = subprocess.run(cmd, capture_output=True, text=True, timeout=8)
             if res.returncode == 0:
@@ -101,27 +125,38 @@ class SiraqPrintAgent:
                 if lines:
                     return lines
         except Exception as e:
-            logger.error(f"Error querying Windows printers: {e}")
+            logger.debug(f"PowerShell Get-Printer fallback: {e}")
 
         # Fallback list including Canon G3010
         return ["Canon G3010 series", "Microsoft Print to PDF"]
 
     def is_printer_ready(self, printer_name):
-        """Check if printer exists in detected printer list"""
+        """Check if printer exists and responds via winspool or detected list"""
+        # Test directly via winspool.drv
+        try:
+            winspool = ctypes.WinDLL("winspool.drv", use_last_error=True)
+            handle = wintypes.HANDLE()
+            if winspool.OpenPrinterW(printer_name, ctypes.byref(handle), None):
+                winspool.ClosePrinter(handle)
+                return True
+        except Exception:
+            pass
+
         return any(printer_name.lower() in p.lower() for p in self.detected_printers)
 
     def send_heartbeat(self):
-        """Send status heartbeat to cloud backend"""
+        """Send status heartbeat to backend"""
         url = f"{self.server_url}/api/agent/heartbeat"
+        is_ready = self.is_printer_ready(self.selected_printer)
         payload = {
             "agentId": "shop-agent-win11-01",
             "computerName": platform.node(),
             "os": f"Windows 11 ({platform.platform()})",
-            "status": "ONLINE" if self.is_printer_ready(self.selected_printer) else "OFFLINE",
+            "status": "ONLINE" if is_ready else "OFFLINE",
             "selectedPrinter": self.selected_printer,
             "availablePrinters": self.detected_printers,
             "defaultPrinter": self.selected_printer,
-            "version": "1.0.4-win11"
+            "version": "1.0.5-win11"
         }
 
         try:
@@ -143,7 +178,7 @@ class SiraqPrintAgent:
         return False
 
     def fetch_queued_jobs(self):
-        """Fetch approved print jobs from the cloud backend"""
+        """Fetch approved print jobs from the backend"""
         url = f"{self.server_url}/api/agent/jobs?limit=5"
         try:
             req = urllib.request.Request(
@@ -160,7 +195,7 @@ class SiraqPrintAgent:
         return []
 
     def update_job_status(self, job_id, status, error_message=None):
-        """Report printing status update back to cloud server"""
+        """Report printing status update back to server"""
         url = f"{self.server_url}/api/agent/jobs"
         payload = {
             "jobId": job_id,
@@ -200,43 +235,96 @@ class SiraqPrintAgent:
             logger.error(f"Download failed for {full_url}: {e}")
             return None
 
+    def slice_pdf_pages(self, pdf_path, page_range_str):
+        """Slice PDF if custom page range specified"""
+        if not HAS_PYPDF or not page_range_str or page_range_str.lower() == "all":
+            return pdf_path
+
+        try:
+            reader = pypdf.PdfReader(str(pdf_path))
+            writer = pypdf.PdfWriter()
+            total_pages = len(reader.pages)
+
+            # Parse pages like "1-3, 5" (1-indexed)
+            target_indices = set()
+            for part in page_range_str.split(","):
+                part = part.strip()
+                if "-" in part:
+                    s, e = part.split("-")
+                    for p in range(int(s), int(e) + 1):
+                        if 1 <= p <= total_pages:
+                            target_indices.add(p - 1)
+                elif part.isdigit():
+                    p = int(part)
+                    if 1 <= p <= total_pages:
+                        target_indices.add(p - 1)
+
+            for idx in sorted(target_indices):
+                writer.add_page(reader.pages[idx])
+
+            sliced_path = pdf_path.with_name(f"sliced_{pdf_path.name}")
+            with open(sliced_path, "wb") as f_out:
+                writer.write(f_out)
+            return sliced_path
+        except Exception as e:
+            logger.warning(f"Could not slice PDF: {e}, using original document")
+            return pdf_path
+
     def print_to_windows(self, file_path, job):
         """Send document to Windows Print Spooler with copies and settings"""
         target_printer = self.selected_printer
         copies = max(1, int(job.get("copies", 1)))
         ext = file_path.suffix.lower()
+        page_range = job.get("pageRange", "All")
 
-        logger.info(f"Dispatching [{file_path.name}] to '{target_printer}' ({copies} copies)")
+        # Slice PDF if necessary
+        actual_file_to_print = file_path
+        if ext == ".pdf":
+            actual_file_to_print = self.slice_pdf_pages(file_path, page_range)
 
-        # Windows Printing via PowerShell & Shell.Application / Start-Process PrintTo
-        # This handles PDF, JPG, PNG, and documents seamlessly on Windows 11
-        clean_file = str(file_path).replace("\\", "/")
+        logger.info(f"Dispatching [{actual_file_to_print.name}] to '{target_printer}' ({copies} copies)")
+
         for i in range(copies):
-            try:
-                ps_script = (
-                    f'$file = "{clean_file}"; '
-                    f'$printer = "{target_printer}"; '
-                    'Start-Process -FilePath $file -Verb PrintTo -ArgumentList "`"$printer`"" -PassThru | Out-Null'
-                )
-                res = subprocess.run(
-                    ["powershell", "-NoProfile", "-Command", ps_script],
-                    capture_output=True,
-                    text=True,
-                    timeout=20
-                )
-                if res.returncode != 0:
-                    logger.warning(f"PowerShell print warning: {res.stderr}")
-            except subprocess.TimeoutExpired:
-                logger.warning(f"Print process timed out for copy {i+1}, continuing...")
-            except Exception as ex:
-                logger.error(f"Print execution exception: {ex}")
-                raise ex
+            # Prefer Edge headless for PDF (silent, reliable, native Windows 11)
+            if ext == ".pdf" and self.edge_path:
+                try:
+                    cmd = [
+                        self.edge_path,
+                        "--headless",
+                        f"--print-to-printer={target_printer}",
+                        str(actual_file_to_print)
+                    ]
+                    res = subprocess.run(cmd, capture_output=True, text=True, timeout=25)
+                    if res.returncode == 0:
+                        logger.info(f"Copy {i+1}/{copies} sent silently via Edge to {target_printer}.")
+                    else:
+                        logger.warning(f"Edge print notice: {res.stderr}")
+                except Exception as ex:
+                    logger.warning(f"Edge print failed, falling back to Start-Process PrintTo: {ex}")
+                    self._fallback_powershell_print(actual_file_to_print, target_printer)
+            else:
+                self._fallback_powershell_print(actual_file_to_print, target_printer)
 
-            # Brief spacing between copies
             if i < copies - 1:
                 time.sleep(2)
 
         return True
+
+    def _fallback_powershell_print(self, file_path, target_printer):
+        clean_file = str(file_path).replace("\\", "/")
+        ps_script = (
+            f'$file = "{clean_file}"; '
+            f'$printer = "{target_printer}"; '
+            'Start-Process -FilePath $file -Verb PrintTo -ArgumentList "`"$printer`"" -PassThru | Out-Null'
+        )
+        res = subprocess.run(
+            ["powershell", "-NoProfile", "-Command", ps_script],
+            capture_output=True,
+            text=True,
+            timeout=20
+        )
+        if res.returncode != 0:
+            logger.warning(f"PowerShell print warning: {res.stderr}")
 
     def process_job(self, job):
         job_id = job.get("id")
@@ -279,10 +367,9 @@ class SiraqPrintAgent:
             self.update_job_status(job_id, "FAILED", error_message=err)
 
         finally:
-            # Clean up temp file
             if self.config.get("cleanup_temp_files", True) and local_file and local_file.exists():
                 try:
-                    time.sleep(3) # allow spooler to read file
+                    time.sleep(3)
                     local_file.unlink(missing_ok=True)
                 except Exception as ce:
                     logger.debug(f"Temp file cleanup notice: {ce}")
